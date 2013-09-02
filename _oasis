@@ -1,0 +1,34 @@
+OASISFormat: 0.3
+Name:        nanomsg
+Version:     0.0.1
+Synopsis:    bindings to the nanomsg library
+Authors:     Rudi Grinberg
+License:     MIT
+Plugins:     META (0.3)
+BuildTools: ocamlbuild
+
+PreInstallCommand: cc -shared -o _build/lib/dllnanomsg_stubs.so -lnanomsg
+
+Library nanomsg
+  Path:       lib
+  BuildDepends: ctypes, ctypes.foreign
+  Modules:    Nanomsg
+  CSources: nanomsg.c
+  CCOpt: -cclib,-Xlinker,-cclib,--no-as-needed,-Wl
+  CCLib: -lnanomsg
+  DllLib: -lnanomsg_stubs
+
+Executable test_nanomsg
+  Path:               lib_test
+  MainIs:             run_tests.ml
+  Build$:             flag(tests)
+  Custom:             true
+  CompiledObject:     best
+  Install:            false
+  BuildDepends:       nanomsg
+  BuildTools: ocamlbuild
+
+Test test_nanomsg
+  Run$:               flag(tests)
+  Command:            $test_nanomsg
+  WorkingDirectory:   lib_test
