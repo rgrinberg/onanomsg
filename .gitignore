@@ -1,8 +1,5 @@
 *.native
 _build/**
 Makefile
-_tags
 *.log
 *.data
-setup.ml
-myocamlbuild.ml
