@@ -1,0 +1,39 @@
+# OASIS_START
+# DO NOT EDIT (digest: e743ef9db4dd3697bafd9eec3c4df88f)
+# Ignore VCS directories, you can use the same kind of rule outside 
+# OASIS_START/STOP if you want to exclude directories that contains 
+# useless stuff for the build process
+<**/.svn>: -traverse
+<**/.svn>: not_hygienic
+".bzr": -traverse
+".bzr": not_hygienic
+".hg": -traverse
+".hg": not_hygienic
+".git": -traverse
+".git": not_hygienic
+"_darcs": -traverse
+"_darcs": not_hygienic
+# Library nanomsg
+"lib/nanomsg.cmxs": use_nanomsg
+<lib/*.ml{,i}>: oasis_library_nanomsg_ccopt
+"lib/nanomsg.c": oasis_library_nanomsg_ccopt
+<lib/nanomsg.{cma,cmxa}>: oasis_library_nanomsg_cclib
+"lib/libnanomsg_stubs.lib": oasis_library_nanomsg_cclib
+"lib/dllnanomsg_stubs.dll": oasis_library_nanomsg_cclib
+"lib/libnanomsg_stubs.a": oasis_library_nanomsg_cclib
+"lib/dllnanomsg_stubs.so": oasis_library_nanomsg_cclib
+<lib/nanomsg.{cma,cmxa}>: oasis_library_nanomsg_dlllib
+<lib/nanomsg.{cma,cmxa}>: use_libnanomsg_stubs
+<lib/*.ml{,i}>: pkg_ctypes
+<lib/*.ml{,i}>: pkg_ctypes.foreign
+"lib/nanomsg.c": pkg_ctypes
+"lib/nanomsg.c": pkg_ctypes.foreign
+# Executable test_nanomsg
+<lib_test/run_tests.{native,byte}>: use_nanomsg
+<lib_test/run_tests.{native,byte}>: pkg_ctypes
+<lib_test/run_tests.{native,byte}>: pkg_ctypes.foreign
+<lib_test/*.ml{,i}>: use_nanomsg
+<lib_test/*.ml{,i}>: pkg_ctypes
+<lib_test/*.ml{,i}>: pkg_ctypes.foreign
+<lib_test/run_tests.{native,byte}>: custom
+# OASIS_STOP
