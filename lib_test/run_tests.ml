@@ -1,4 +1,4 @@
 
-let () = print_endline "onanomsg"
+let () = print_endline "nanomsg"
 
-let xx = Onanomsg.nn_bind 1 "testing"
+let xx = Nanomsg.nn_bind 1 "testing"
