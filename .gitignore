@@ -2,7 +2,6 @@
 _build/**
 Makefile
 _tags
-*.mllib
 *.log
 *.data
 setup.ml
