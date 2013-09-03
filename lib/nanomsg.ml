@@ -52,6 +52,9 @@ let eisconn              = (nn_hausnumero + 27)
 let eterm                = (nn_hausnumero + 53)
 let efsm                 = (nn_hausnumero + 54)
 
+let nn_proto_pair = 1
+let nn_pair = (nn_proto_pair + 16) + 0
+
 type nn_iovec
 let nn_iovec : nn_iovec structure typ = structure "nn_iovec"
 let iov_base = nn_iovec *:* (ptr void)
