@@ -81,8 +81,8 @@ let () = seal nn_cmsghdr
 
 module Pub_sub = struct
   let nn_proto_pubsub    = 2
-  let nn_pub             = (nn_proto_pubsub * 16) + 0
-  let nn_sub             = (nn_proto_pubsub * 16) + 1
+  let nn_pub             = nn_proto_pubsub * 16 + 0
+  let nn_sub             = nn_proto_pubsub * 16 + 1
   let nn_sub_subscribe   = 1
   let nn_sub_unsubscribe = 2
 end
@@ -95,21 +95,21 @@ module Req_rep = struct
 end
 
 module Survey = struct
-  let nn_proto_survey = 6
-  let nn_surveyor = nn_proto_survey * 16 + 0
-  let nn_respondent = nn_proto_survey * 16 + 1
+  let nn_proto_survey      = 6
+  let nn_surveyor          = nn_proto_survey * 16 + 0
+  let nn_respondent        = nn_proto_survey * 16 + 1
   let nn_surveyor_deadline = 1
 end
 
 module Pipeline = struct
   let nn_proto_pipeline = 5
-  let nn_push = nn_proto_pipeline * 16 + 0
-  let nn_pull = nn_proto_pipeline * 16 + 1
+  let nn_push           = nn_proto_pipeline * 16 + 0
+  let nn_pull           = nn_proto_pipeline * 16 + 1
 end
 
 module Bus = struct
   let nn_proto_bus = 7
-  let nn_bus = nn_proto_bus * 16 + 0
+  let nn_bus       = nn_proto_bus * 16 + 0
 end
 
 let from = Dl.(dlopen ~filename:"libnanomsg.so" ~flags:[RTLD_NOW])
