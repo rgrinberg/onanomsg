@@ -54,8 +54,8 @@ let close (Socket socket) =
   let ret = nn_close socket in
   raise_not_zero ret
 
-let bind (Socket socket) ~transport =
-  let endpoint = nn_bind socket transport in
+let bind (Socket socket) ~address =
+  let endpoint = nn_bind socket address in
   raise_negative endpoint;
   Endpoint endpoint
 
@@ -63,5 +63,17 @@ let send ?(block=true) (Socket socket) str =
   let flag = if block then 0 else nn_dontwait in
   let unsigned_length = Unsigned.Size_t.of_int (String.length str) in
   let read = nn_send socket str unsigned_length flag in
+  raise_negative read;
+  `Read read
+
+let connect (Socket socket) ~address =
+  let endpoint = nn_connect socket address in
+  raise_negative endpoint;
+  Socket endpoint
+
+let recv_str ?(block=true) (Socket socket) ~str = 
+  let flag = if block then 0 else nn_dontwait in
+  let buf_length = Unsigned.Size_t.of_int (String.length str) in
+  let read = nn_recv_str socket str buf_length flag in
   raise_negative read;
   `Read read
