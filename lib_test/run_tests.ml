@@ -5,11 +5,13 @@ let () =
   let sender = Onanomsg.socket ~domain:Onanomsg.Af_sp ~sock_type:`Req in
   let _ = Onanomsg.connect sender ~address:"inproc://test" in
   let packet = "testing" in
-  ignore (Onanomsg.send sender packet);
+  Printf.printf "packet(%s) length: %d\n" packet (String.length packet);
+  let (`Read sent) = Onanomsg.send sender packet in
   let buf = String.create (String.length packet) in
-  let received = Onanomsg.recv_str receiver ~str:buf in
+  let (`Read received) = Onanomsg.recv_str receiver ~str:buf in
   Onanomsg.close receiver;
   Onanomsg.close sender;
-  print_endline ("received: " ^ buf)
+  print_endline ("received: " ^ buf);
+  Printf.printf "sent: %d, received: %d\n" sent received
 
 
