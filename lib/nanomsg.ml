@@ -101,6 +101,17 @@ module Survey = struct
   let nn_surveyor_deadline = 1
 end
 
+module Pipeline = struct
+  let nn_proto_pipeline = 5
+  let nn_push = nn_proto_pipeline * 16 + 0
+  let nn_pull = nn_proto_pipeline * 16 + 1
+end
+
+module Bus = struct
+  let nn_proto_bus = 7
+  let nn_bus = nn_proto_bus * 16 + 0
+end
+
 let from = Dl.(dlopen ~filename:"libnanomsg.so" ~flags:[RTLD_NOW])
 
 let nn_errno      = foreign ~from "nn_errno" (void @-> returning int)
