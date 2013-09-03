@@ -11,7 +11,7 @@ PreInstallCommand: cc -shared -o _build/lib/dllnanomsg_stubs.so -lnanomsg
 
 Library nanomsg
   Path:       lib
-  BuildDepends: ctypes, ctypes.foreign
+  BuildDepends: ctypes, ctypes.foreign, threads
   Modules:    Nanomsg, Onanomsg
   CSources: nanomsg.c
   CCOpt: -cclib,-Xlinker,-cclib,--no-as-needed,-Wl
