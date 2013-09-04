@@ -41,3 +41,4 @@
 <lib_test/*.ml{,i}>: pkg_threads
 <lib_test/run_tests.{native,byte}>: custom
 # OASIS_STOP
+true: debug
