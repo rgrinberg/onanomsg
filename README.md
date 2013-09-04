@@ -4,6 +4,9 @@ Ctypes based bindings to nanomsg for OCaml (alpha)
 
 ## Installation
 
+Currently you must have the HEAD version of ctypes. Because of the reliance
+on `string_opt`
+
 Please install [nanomsg](https://github.com/250bpm/nanomsg) first.
 
 ```
