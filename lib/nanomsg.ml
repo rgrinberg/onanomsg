@@ -133,8 +133,6 @@ let nn_send       = foreign ~from "nn_send" (int @-> string @-> size_t @-> int @
 
 let nn_recv       = foreign ~from "nn_recv"
     (int @-> ptr (string_opt) @-> size_t @-> int @-> returning int)
-let nn_recv2      = foreign ~from "nn_recv" 
-    (int @-> string_opt @-> size_t @-> int @-> returning int)
 
 let nn_sendmsg    = foreign ~from "nn_sendmsg" (int @-> ptr nn_msghdr @-> int @-> returning int)
 let nn_recvmsg    = foreign ~from "nn_recvmsg" (int @-> ptr nn_msghdr @-> int @-> returning int)
