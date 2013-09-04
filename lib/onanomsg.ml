@@ -1,6 +1,6 @@
 open Nanomsg
 
-exception Todo_exception
+exception General_error of string
 
 type transport =
   | Inproc
@@ -37,7 +37,9 @@ let int_of_sock_type = function
   | `Respondent -> Survey.nn_respondent
   | `Bus -> Bus.nn_bus
 
-let raise_if ~cond v = if cond v then raise Todo_exception
+let current_error () = nn_strerror (nn_errno ())
+let throw_current_error () = raise (General_error (current_error ()))
+let raise_if ~cond v = if cond v then throw_current_error ()
 let raise_negative = raise_if ~cond:(fun x -> x < 0)
 let raise_not_zero = raise_if ~cond:(fun x -> x <> 0)
 
@@ -81,11 +83,9 @@ let recv_str ?(block=true) (Socket socket) ~str =
 let recv ?(block=true) (Socket socket) =
   let open Ctypes in
   let flag = if block then 0 else nn_dontwait in
-  let cbuf = allocate string_opt None in
-  let read = nn_recv socket cbuf nn_msg_unsigned flag in
   let s = None in
-  let read2 = nn_recv2 socket s nn_msg_unsigned flag in
+  let read = nn_recv2 socket s nn_msg_unsigned flag in
   raise_negative read;
   match s with
-  | None -> failwith "TODO"
+  | None -> failwith "TEMP STUFF"
   | Some x -> x
