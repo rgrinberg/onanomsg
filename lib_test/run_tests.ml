@@ -21,7 +21,7 @@ let () =
   let _ = Onanomsg.connect sender ~address:"inproc://*" in
   let packet = "testing" in
   Printf.printf "packet(%s) length: %d\n" packet (String.length packet);
-  let (`Read sent) = Onanomsg.send sender packet in
+  let (`Read _) = Onanomsg.send sender packet in
   let received = Onanomsg.recv receiver in
   Onanomsg.close receiver;
   Onanomsg.close sender;
