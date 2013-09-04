@@ -77,3 +77,15 @@ let recv_str ?(block=true) (Socket socket) ~str =
   let read = nn_recv_str socket str buf_length flag in
   raise_negative read;
   `Read read
+
+let recv ?(block=true) (Socket socket) =
+  let open Ctypes in
+  let flag = if block then 0 else nn_dontwait in
+  let cbuf = allocate string_opt None in
+  let read = nn_recv socket cbuf nn_msg_unsigned flag in
+  let s = None in
+  let read2 = nn_recv2 socket s nn_msg_unsigned flag in
+  raise_negative read;
+  match s with
+  | None -> failwith "TODO"
+  | Some x -> x
