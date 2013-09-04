@@ -86,6 +86,7 @@ let subscribe (Socket socket) ~topic =
   let open Ctypes in
   let opt_length = Unsigned.Size_t.of_int 0 in
   let topic_ptr = to_voidp (allocate string topic) in
-  nn_setsockopt socket 
+  let v = nn_setsockopt socket 
     Pub_sub.nn_sub Pub_sub.nn_sub_subscribe
-    topic_ptr opt_length
+    topic_ptr opt_length in
+  raise_negative v
