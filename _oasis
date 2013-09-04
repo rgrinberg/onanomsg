@@ -26,7 +26,7 @@ Executable test_nanomsg
   CompiledObject:     best
   Install:            false
   BuildDepends:       nanomsg
-  BuildTools: ocamlbuild
+  BuildTools:         ocamlbuild
 
 Executable test_endpoint
   Path:               lib_test
@@ -36,7 +36,7 @@ Executable test_endpoint
   CompiledObject:     best
   Install:            false
   BuildDepends:       nanomsg
-  BuildTools: ocamlbuild
+  BuildTools:         ocamlbuild
 
 Test test_nanomsg
   Run$:               flag(tests)
