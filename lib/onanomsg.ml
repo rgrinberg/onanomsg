@@ -7,6 +7,7 @@ type domains =
   | Af_sp_raw
 
 type sock_type = [
+  | `Pair (* pair *)
   | `Pub (* pub sub *)
   | `Sub
   | `Req (* req rep *)
@@ -22,6 +23,7 @@ type 'a sock = Socket of int
 type endpoint = Endpoint of int
 
 let int_of_sock_type = function
+  | `Pair -> Pair.nn_pair
   | `Pub -> Pub_sub.nn_pub
   | `Sub -> Pub_sub.nn_sub
   | `Req -> Req_rep.nn_req
