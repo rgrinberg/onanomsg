@@ -73,13 +73,6 @@ let connect (Socket socket) ~address =
   raise_negative endpoint;
   Socket endpoint
 
-let recv_str ?(block=true) (Socket socket) ~str = 
-  let flag = if block then 0 else nn_dontwait in
-  let buf_length = Unsigned.Size_t.of_int (String.length str) in
-  let read = nn_recv_str socket str buf_length flag in
-  raise_negative read;
-  `Read read
-
 let recv ?(block=true) (Socket socket) =
   let open Ctypes in
   let flag = if block then 0 else nn_dontwait in
