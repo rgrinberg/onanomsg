@@ -71,7 +71,7 @@ let send ?(block=true) (Socket socket) str =
 let connect (Socket socket) ~address =
   let endpoint = nn_connect socket address in
   raise_negative endpoint;
-  Socket endpoint
+  Endpoint endpoint
 
 let recv ?(block=true) (Socket socket) =
   let open Ctypes in
