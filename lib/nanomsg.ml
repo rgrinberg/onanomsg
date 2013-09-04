@@ -77,9 +77,9 @@ let () = seal nn_msghdr
 
 type nn_cmsghdr
 let nn_cmsghdr : nn_cmsghdr structure typ = structure "nn_cmsghdr"
-let cmsg_len   = nn_cmsghdr *:* size_t
-let cmsg_level = nn_cmsghdr *:* int
-let cmsg_type  = nn_cmsghdr *:* int
+let cmsg_len   = field nn_cmsghdr "cmsg_len" size_t
+let cmsg_level = field nn_cmsghdr "cmsg_level" int
+let cmsg_type  = field nn_cmsghdr "cmsg_type" int
 let () = seal nn_cmsghdr
 
 module Pub_sub = struct
