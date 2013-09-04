@@ -69,10 +69,10 @@ let () = seal nn_iovec
 
 type nn_msghdr
 let nn_msghdr : nn_msghdr structure typ = structure "nn_msghdr"
-let msg_iov        = nn_msghdr *:* (ptr nn_iovec)
-let msg_iovlen     = nn_msghdr *:* int
-let msg_control    = nn_msghdr *:* (ptr void)
-let msg_controllen = nn_msghdr *:* size_t
+let msg_iov        = field nn_msghdr "msg_iov" (ptr nn_iovec)
+let msg_iovlen     = field nn_msghdr "msg_iovlen" int
+let msg_control    = field nn_msghdr "msg_control" (ptr void)
+let msg_controllen = field nn_msghdr "msg_controllen" size_t
 let () = seal nn_msghdr
 
 type nn_cmsghdr
