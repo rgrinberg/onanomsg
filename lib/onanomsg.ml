@@ -2,11 +2,6 @@ open Nanomsg
 
 exception General_error of string
 
-type transport =
-  | Inproc
-  | Ipc
-  | Tcp
-
 type domains =
   | Af_sp
   | Af_sp_raw
@@ -38,6 +33,7 @@ let int_of_sock_type = function
   | `Bus -> Bus.nn_bus
 
 let current_error () = nn_strerror (nn_errno ())
+
 let throw_current_error () = raise (General_error (current_error ()))
 let raise_if ~cond v = if cond v then throw_current_error ()
 let raise_negative = raise_if ~cond:(fun x -> x < 0)
