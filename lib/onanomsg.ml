@@ -60,17 +60,17 @@ let bind (Socket socket) ~address =
   raise_negative endpoint;
   Endpoint endpoint
 
+let connect (Socket socket) ~address =
+  let endpoint = nn_connect socket address in
+  raise_negative endpoint;
+  Endpoint endpoint
+
 let send ?(block=true) (Socket socket) str =
   let flag = if block then 0 else nn_dontwait in
   let unsigned_length = Unsigned.Size_t.of_int (String.length str) in
   let read = nn_send socket str unsigned_length flag in
   raise_negative read;
   `Read read
-
-let connect (Socket socket) ~address =
-  let endpoint = nn_connect socket address in
-  raise_negative endpoint;
-  Endpoint endpoint
 
 let recv ?(block=true) (Socket socket) =
   let open Ctypes in
