@@ -83,9 +83,9 @@ let recv_str ?(block=true) (Socket socket) ~str =
 let recv ?(block=true) (Socket socket) =
   let open Ctypes in
   let flag = if block then 0 else nn_dontwait in
-  let s = None in
-  let read = nn_recv2 socket s nn_msg_unsigned flag in
+  let s = allocate string_opt None in
+  let read = nn_recv socket s nn_msg flag in
   raise_negative read;
-  match s with
+  match !@ s with
   | None -> failwith "TEMP STUFF"
   | Some x -> x

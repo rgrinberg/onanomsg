@@ -58,8 +58,7 @@ let efsm                 = (nn_hausnumero + 54)
 let nn_proto_pair = 1
 let nn_pair = (nn_proto_pair + 16) + 0
 
-let nn_msg = sizeof (size_t) - 1
-let nn_msg_unsigned = Unsigned.Size_t.of_int nn_msg
+let nn_msg = Unsigned.Size_t.of_int (-1)
 
 type nn_iovec
 let nn_iovec : nn_iovec structure typ = structure "nn_iovec"
@@ -131,8 +130,12 @@ let nn_bind       = foreign ~from "nn_bind" (int @-> string @-> returning int)
 let nn_connect    = foreign ~from "nn_connect" (int @-> string @-> returning int)
 let nn_shutdown   = foreign ~from "nn_shutdown" (int @-> int @-> returning int)
 let nn_send       = foreign ~from "nn_send" (int @-> string @-> size_t @-> int @-> returning int)
-let nn_recv       = foreign ~from "nn_recv" (int @-> ptr (string_opt) @-> size_t @-> int @-> returning int)
-let nn_recv2      = foreign ~from "nn_recv" (int @-> string_opt @-> size_t @-> int @-> returning int)
+
+let nn_recv       = foreign ~from "nn_recv"
+    (int @-> ptr (string_opt) @-> size_t @-> int @-> returning int)
+let nn_recv2      = foreign ~from "nn_recv" 
+    (int @-> string_opt @-> size_t @-> int @-> returning int)
+
 let nn_sendmsg    = foreign ~from "nn_sendmsg" (int @-> ptr nn_msghdr @-> int @-> returning int)
 let nn_recvmsg    = foreign ~from "nn_recvmsg" (int @-> ptr nn_msghdr @-> int @-> returning int)
 let nn_device     = foreign ~from "nn_device" (int @-> int @-> returning int)
