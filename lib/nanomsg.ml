@@ -55,9 +55,6 @@ let eisconn              = (nn_hausnumero + 27)
 let eterm                = (nn_hausnumero + 53)
 let efsm                 = (nn_hausnumero + 54)
 
-let nn_proto_pair = 1
-let nn_pair = (nn_proto_pair + 16) + 0
-
 let nn_msg = Unsigned.Size_t.of_int (-1)
 
 type nn_iovec
@@ -81,6 +78,12 @@ let cmsg_level = field nn_cmsghdr "cmsg_level" int
 let cmsg_type  = field nn_cmsghdr "cmsg_type" int
 let () = seal nn_cmsghdr
 
+
+module Pair = struct
+  let nn_proto_pair = 1
+  let nn_pair       = nn_proto_pair * 16 + 0
+end
+
 module Pub_sub = struct
   let nn_proto_pubsub    = 2
   let nn_pub             = nn_proto_pubsub * 16 + 0
@@ -96,17 +99,18 @@ module Req_rep = struct
   let nn_req_resend_ivl = 1
 end
 
+module Pipeline = struct
+  let nn_proto_pipeline = 5
+  let nn_push           = nn_proto_pipeline * 16 + 0
+  let nn_pull           = nn_proto_pipeline * 16 + 1
+end
+
+
 module Survey = struct
   let nn_proto_survey      = 6
   let nn_surveyor          = nn_proto_survey * 16 + 0
   let nn_respondent        = nn_proto_survey * 16 + 1
   let nn_surveyor_deadline = 1
-end
-
-module Pipeline = struct
-  let nn_proto_pipeline = 5
-  let nn_push           = nn_proto_pipeline * 16 + 0
-  let nn_pull           = nn_proto_pipeline * 16 + 1
 end
 
 module Bus = struct
