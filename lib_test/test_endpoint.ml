@@ -2,18 +2,20 @@
 
 let () = 
   let (addr1, addr2) = ("inproc://tt1", "inproc://tt2") in
-  let (r1, r2) = (Onanomsg.socket ~domain:Onanomsg.Af_sp ~sock_type:`Sub
+  let (sub1, sub2) = (Onanomsg.socket ~domain:Onanomsg.Af_sp ~sock_type:`Sub
                  , Onanomsg.socket ~domain:Onanomsg.Af_sp ~sock_type:`Sub) in
-  let (_, _) = (Onanomsg.connect r1 ~address:addr1
-               , Onanomsg.connect r2 ~address:addr2) in
+  let (_, _) = (Onanomsg.connect sub1 ~address:addr1
+               , Onanomsg.connect sub2 ~address:addr2) in
   print_endline "connected subscribers";
   let packet = "one two three" in
-  let sub = Onanomsg.socket ~domain:Onanomsg.Af_sp ~sock_type:`Pub in
-  ignore (Onanomsg.bind sub ~address:addr1);
-  ignore (Onanomsg.bind sub ~address:addr2);
-  ignore (Onanomsg.send sub packet);
+  let pub = Onanomsg.socket ~domain:Onanomsg.Af_sp ~sock_type:`Pub in
+  ignore (Onanomsg.bind pub ~address:addr1);
+  ignore (Onanomsg.bind pub ~address:addr2);
+  ignore (Onanomsg.send pub packet);
   print_endline "published message";
-  Onanomsg.close sub;
-  let (x1, x2) = Onanomsg.(recv r1, recv r2) in
+  Onanomsg.close pub;
+  print_endline "closed publisher";
+  let (x1, x2) = Onanomsg.(recv sub1, recv sub2) in
+  print_endline "receiving in subscribers";
   Printf.printf "Received: %s -- Received %s\n" x1 x2;
-  Onanomsg.(close r1; close r2)
+  Onanomsg.(close sub1; close sub2)
