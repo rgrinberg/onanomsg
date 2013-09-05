@@ -1,6 +1,6 @@
 open Nanomsg
 
-exception General_error of string
+exception Error of int * string
 
 type domains =
   | Af_sp
@@ -34,9 +34,13 @@ let int_of_sock_type = function
   | `Respondent -> Survey.nn_respondent
   | `Bus -> Bus.nn_bus
 
-let current_error () = nn_strerror (nn_errno ())
+let current_error () = 
+  let current_error_code = nn_errno () in
+  (current_error_code, nn_strerror current_error_code)
 
-let throw_current_error () = raise (General_error (current_error ()))
+let throw_current_error () = 
+  let (code, err_string) = current_error () in
+  raise (Error (code, err_string))
 
 let raise_if ~cond v = if cond v then throw_current_error ()
 let raise_negative = raise_if ~cond:(fun x -> x < 0)
