@@ -30,6 +30,7 @@ type error =
   | E_IS_CONN
   | E_TERM
   | E_FSM
+  | E_UNKNOWN (* NOT nanomsg error *)
 
 exception Error of error * string
 
@@ -65,13 +66,45 @@ let int_of_sock_type = function
   | `Respondent -> Survey.nn_respondent
   | `Bus -> Bus.nn_bus
 
+let error_of_int i = match i with
+  | _ when i = enotsup         -> E_NOT_SUP
+  | _ when i = eprotonosupport -> E_PROTO_NO_SUPPORT
+  | _ when i = enobufs         -> E_NO_BUFFS
+  | _ when i = enetdown        -> E_NET_DOWN
+  | _ when i = eaddrinuse      -> E_ADDR_IN_USE
+  | _ when i = eaddrnotavail   -> E_ADDR_NOT_AVAIL
+  | _ when i = econnrefused    -> E_CONN_REFUSED
+  | _ when i = einprogress     -> E_IN_PROGRESS
+  | _ when i = enotsock        -> E_NOT_SOCK
+  | _ when i = eafnosupport    -> E_AF_NO_SUPPORT
+  | _ when i = eproto          -> E_PROTO
+  | _ when i = eagain          -> E_AGAIN
+  | _ when i = ebadf           -> E_BAD_F
+  | _ when i = einval          -> E_INVAL
+  | _ when i = emfile          -> E_MFILE
+  | _ when i = efault          -> E_FAULT
+  | _ when i = eaccess         -> E_ACCCESS
+  | _ when i = enetreset       -> E_NET_RESET
+  | _ when i = enetunreach     -> E_NET_UNREACH
+  | _ when i = ehostunreach    -> E_HOST_UNREACH
+  | _ when i = enotconn        -> E_NOT_CONN
+  | _ when i = emsgsize        -> E_MSG_SIZE
+  | _ when i = etimedout       -> E_TIMED_OUT
+  | _ when i = econnaborted    -> E_CONN_ABORTED
+  | _ when i = econnreset      -> E_CONN_RESET
+  | _ when i = enoprotoopt     -> E_NO_PROTO_OPT
+  | _ when i = eisconn         -> E_IS_CONN
+  | _ when i = eterm           -> E_TERM
+  | _ when i = efsm            -> E_FSM
+  | _ -> E_UNKNOWN
+
 let current_error () = 
   let current_error_code = nn_errno () in
   (current_error_code, nn_strerror current_error_code)
 
 let throw_current_error () = 
   let (code, err_string) = current_error () in
-  raise (Error (code, err_string))
+  raise (Error (error_of_int code, err_string))
 
 let raise_if ~cond v = if cond v then throw_current_error ()
 let raise_negative = raise_if ~cond:(fun x -> x < 0)
