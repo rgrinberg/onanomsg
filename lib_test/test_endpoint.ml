@@ -1,17 +1,18 @@
 
 
 let () = 
-  let (addr1, addr2) = ("inproc://tt1", "inproc://tt2") in
   let open Onanomsg.Domain in
-  let (sub1, sub2) = (Onanomsg.socket ~domain:Af_sp ~sock_type:`Sub
-                 , Onanomsg.socket ~domain:Af_sp ~sock_type:`Sub) in
+  let open Onanomsg.Socket in
+  let (addr1, addr2) = ("inproc://tt1", "inproc://tt2") in
+  let (sub1, sub2) = (socket ~domain:Af_sp ~sock_type:sub
+                 , socket ~domain:Af_sp ~sock_type:sub) in
   let (_, _) = (Onanomsg.connect sub1 ~address:addr1
                , Onanomsg.connect sub2 ~address:addr2) in
   Onanomsg.subscribe sub1 ~topic:"";
   Onanomsg.subscribe sub2 ~topic:"";
   print_endline "connected subscribers";
   let packet = "one two three" in
-  let pub = Onanomsg.socket ~domain:Af_sp ~sock_type:`Pub in
+  let pub = socket ~domain:Af_sp ~sock_type:pub in
   ignore (Onanomsg.bind pub ~address:addr1);
   ignore (Onanomsg.bind pub ~address:addr2);
   ignore (Onanomsg.send pub packet);

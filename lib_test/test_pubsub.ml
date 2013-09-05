@@ -1,13 +1,14 @@
 
 let () = 
   let open Onanomsg.Domain in
+  let open Onanomsg.Socket in
   let address = "inproc://t2t" in
-  let sub = Onanomsg.socket ~domain:Af_sp ~sock_type:`Sub in
+  let sub = socket ~domain:Af_sp ~sock_type:sub in
   let endpoint = Onanomsg.connect sub ~address in
   Onanomsg.subscribe sub ~topic:"";
   print_endline "Connecting subscriber";
   let packet = "foo bar baz" in
-  let pub = Onanomsg.socket ~domain:Af_sp ~sock_type:`Pub in
+  let pub = socket ~domain:Af_sp ~sock_type:pub in
   let endpoint = Onanomsg.bind pub ~address in
   let (`Read _) = Onanomsg.send pub packet in
   print_endline "published message";
