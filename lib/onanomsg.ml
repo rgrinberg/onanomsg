@@ -84,9 +84,18 @@ let recv ?(block=true) (Socket socket) =
 
 let subscribe (Socket socket) ~topic =
   let open Ctypes in
-  let opt_length = Unsigned.Size_t.of_int 0 in
+  let opt_length = Unsigned.Size_t.of_int (String.length topic) in
   let topic_ptr = to_voidp (allocate string topic) in
   let v = nn_setsockopt socket 
     Pub_sub.nn_sub Pub_sub.nn_sub_subscribe
+    topic_ptr opt_length in
+  raise_negative v
+
+let unsubscribe (Socket socket) ~topic =
+  let open Ctypes in
+  let opt_length = Unsigned.Size_t.of_int (String.length topic) in
+  let topic_ptr = to_voidp (allocate string topic) in
+  let v = nn_setsockopt socket 
+    Pub_sub.nn_sub Pub_sub.nn_sub_unsubscribe
     topic_ptr opt_length in
   raise_negative v
