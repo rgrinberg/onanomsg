@@ -66,9 +66,15 @@ let error_of_int i = match i with
 
 exception Error of error * string
 
-type domains =
-  | Af_sp
-  | Af_sp_raw
+module Domain = struct
+  type t =
+    | Af_sp
+    | Af_sp_raw
+
+  let to_int = function
+    | Af_sp -> af_sp
+    | Af_sp_raw -> af_sp_raw
+end
 
 type sock_type = [
   | `Pair (* pair *)
@@ -111,12 +117,8 @@ let int_of_sock_type = function
 
 type 'a socket = Socket of int
 
-let int_of_domain = function
-  | Af_sp -> af_sp
-  | Af_sp_raw -> af_sp_raw
-
-let socket ?(domain=Af_sp) ~sock_type =
-  let ret = nn_socket (int_of_domain domain) (int_of_sock_type sock_type) in
+let socket ?(domain=Domain.Af_sp) ~sock_type =
+  let ret = nn_socket (Domain.to_int domain) (int_of_sock_type sock_type) in
   raise_negative ret;
   Socket ret
 
