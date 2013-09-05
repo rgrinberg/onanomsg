@@ -52,6 +52,7 @@ let econnaborted         = (nn_hausnumero + 24)
 let econnreset           = (nn_hausnumero + 25)
 let enoprotoopt          = (nn_hausnumero + 26)
 let eisconn              = (nn_hausnumero + 27)
+(* native error codes *)
 let eterm                = (nn_hausnumero + 53)
 let efsm                 = (nn_hausnumero + 54)
 
