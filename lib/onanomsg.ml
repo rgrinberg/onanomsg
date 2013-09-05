@@ -32,40 +32,6 @@ type error =
   | E_FSM
   | E_UNKNOWN (* NOT nanomsg error *)
 
-exception Error of error * string
-
-type domains =
-  | Af_sp
-  | Af_sp_raw
-
-type sock_type = [
-  | `Pair (* pair *)
-  | `Pub (* pub sub *)
-  | `Sub
-  | `Req (* req rep *)
-  | `Rep
-  | `Push (* pipeline *)
-  | `Pull
-  | `Surveyor (* survey *)
-  | `Respondent
-  | `Bus ] (* bus *)
-
-type 'a socket = Socket of int
-
-type endpoint = Endpoint of int
-
-let int_of_sock_type = function
-  | `Pair -> Pair.nn_pair
-  | `Pub -> Pub_sub.nn_pub
-  | `Sub -> Pub_sub.nn_sub
-  | `Req -> Req_rep.nn_req
-  | `Rep -> Req_rep.nn_rep
-  | `Push -> Pipeline.nn_push
-  | `Pull -> Pipeline.nn_pull
-  | `Surveyor -> Survey.nn_surveyor
-  | `Respondent -> Survey.nn_respondent
-  | `Bus -> Bus.nn_bus
-
 let error_of_int i = match i with
   | _ when i = enotsup         -> E_NOT_SUP
   | _ when i = eprotonosupport -> E_PROTO_NO_SUPPORT
@@ -98,6 +64,24 @@ let error_of_int i = match i with
   | _ when i = efsm            -> E_FSM
   | _ -> E_UNKNOWN
 
+exception Error of error * string
+
+type domains =
+  | Af_sp
+  | Af_sp_raw
+
+type sock_type = [
+  | `Pair (* pair *)
+  | `Pub (* pub sub *)
+  | `Sub
+  | `Req (* req rep *)
+  | `Rep
+  | `Push (* pipeline *)
+  | `Pull
+  | `Surveyor (* survey *)
+  | `Respondent
+  | `Bus ] (* bus *)
+
 let current_error () = 
   let current_error_code = nn_errno () in
   (current_error_code, nn_strerror current_error_code)
@@ -109,6 +93,23 @@ let throw_current_error () =
 let raise_if ~cond v = if cond v then throw_current_error ()
 let raise_negative = raise_if ~cond:(fun x -> x < 0)
 let raise_not_zero = raise_if ~cond:(fun x -> x <> 0)
+
+
+type endpoint = Endpoint of int
+
+let int_of_sock_type = function
+  | `Pair -> Pair.nn_pair
+  | `Pub -> Pub_sub.nn_pub
+  | `Sub -> Pub_sub.nn_sub
+  | `Req -> Req_rep.nn_req
+  | `Rep -> Req_rep.nn_rep
+  | `Push -> Pipeline.nn_push
+  | `Pull -> Pipeline.nn_pull
+  | `Surveyor -> Survey.nn_surveyor
+  | `Respondent -> Survey.nn_respondent
+  | `Bus -> Bus.nn_bus
+
+type 'a socket = Socket of int
 
 let int_of_domain = function
   | Af_sp -> af_sp
