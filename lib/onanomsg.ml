@@ -103,6 +103,27 @@ let raise_not_zero = raise_if ~cond:(fun x -> x <> 0)
 
 type endpoint = Endpoint of int
 
+module Socket = struct
+  type 'a t = Socket of int
+  type 'a kind = int
+
+  let pair       = Pair.nn_pair
+  let pub        = Pub_sub.nn_pub
+  let sub        = Pub_sub.nn_sub
+  let req        = Req_rep.nn_req
+  let rep        = Req_rep.nn_rep
+  let push       = Pipeline.nn_push
+  let pull       = Pipeline.nn_pull
+  let surveyor   = Survey.nn_surveyor
+  let respondent = Survey.nn_respondent
+  let bus        = Bus.nn_bus
+
+  let socket ~domain ~sock_type =
+    let ret = nn_socket (Domain.to_int domain) sock_type in
+    raise_negative ret;
+    Socket ret
+end
+
 let int_of_sock_type = function
   | `Pair -> Pair.nn_pair
   | `Pub -> Pub_sub.nn_pub
@@ -115,12 +136,7 @@ let int_of_sock_type = function
   | `Respondent -> Survey.nn_respondent
   | `Bus -> Bus.nn_bus
 
-type 'a socket = Socket of int
-
-let socket ?(domain=Domain.Af_sp) ~sock_type =
-  let ret = nn_socket (Domain.to_int domain) (int_of_sock_type sock_type) in
-  raise_negative ret;
-  Socket ret
+open Socket
 
 let close (Socket socket) =
   let ret = nn_close socket in
