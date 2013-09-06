@@ -102,6 +102,8 @@ let raise_not_zero = raise_if ~cond:(fun x -> x <> 0)
 
 type endpoint = Endpoint of int
 
+type fd = int
+
 module Socket = struct
   type 'a t = Socket of int
   type 'a kind = int

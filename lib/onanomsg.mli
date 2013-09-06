@@ -40,6 +40,8 @@ end
 
 type endpoint
 
+type fd = private int 
+
 module Socket : sig
   type 'a t
   type 'a kind
@@ -70,4 +72,4 @@ val subscribe : [< `Sub] Socket.t -> topic:string -> unit
 
 val unsubscribe : [< `Sub] Socket.t -> topic:string -> unit
 
-val fd : 'a Socket.t -> int
+val fd : 'a Socket.t -> fd
