@@ -100,7 +100,6 @@ let raise_if ~cond v = if cond v then throw_current_error ()
 let raise_negative = raise_if ~cond:(fun x -> x < 0)
 let raise_not_zero = raise_if ~cond:(fun x -> x <> 0)
 
-
 type endpoint = Endpoint of int
 
 module Socket = struct

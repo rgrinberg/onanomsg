@@ -1,5 +1,5 @@
 type error =
-    E_NOT_SUP
+  | E_NOT_SUP
   | E_PROTO_NO_SUPPORT
   | E_NO_BUFFS
   | E_NET_DOWN
@@ -33,27 +33,28 @@ type error =
 exception Error of error * string
 
 module Domain : sig 
-  type t = Af_sp | Af_sp_raw val to_int : t -> int 
+  type t = 
+    | Af_sp 
+    | Af_sp_raw 
 end
 
 type endpoint
 
-module Socket :
-  sig
-    type 'a t
-    type 'a kind
-    val pair       : [> `Pair] kind
-    val pub        : [> `Pub] kind
-    val sub        : [> `Sub] kind
-    val req        : [> `Req] kind
-    val rep        : [> `Rep] kind
-    val push       : [> `Push] kind
-    val pull       : [> `Pull] kind
-    val surveyor   : [> `Surveyor] kind
-    val respondent : [> `Respondent] kind
-    val bus        : [> `Bus] kind
-    val socket : domain:Domain.t -> sock_type:('a kind) -> 'a t
-  end
+module Socket : sig
+  type 'a t
+  type 'a kind
+  val pair       : [> `Pair] kind
+  val pub        : [> `Pub] kind
+  val sub        : [> `Sub] kind
+  val req        : [> `Req] kind
+  val rep        : [> `Rep] kind
+  val push       : [> `Push] kind
+  val pull       : [> `Pull] kind
+  val surveyor   : [> `Surveyor] kind
+  val respondent : [> `Respondent] kind
+  val bus        : [> `Bus] kind
+  val socket : domain:Domain.t -> sock_type:('a kind) -> 'a t
+end
 
 val close : 'a Socket.t -> unit
 
