@@ -28,7 +28,7 @@ let () =
   let packet = "foo bar baz" in
   let pub = socket ~domain:Af_sp ~sock_type:pub in
   let endpoint = Onanomsg.bind pub ~address in
-  let (`Read _) = Onanomsg.send pub packet in
+  Onanomsg.send pub packet in
   let recv_msg = Onanomsg.recv sub in
   Printf.printf "Received: %s\n" recv_msg;
   Onanomsg.close pub;
