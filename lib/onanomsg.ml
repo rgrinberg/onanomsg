@@ -188,3 +188,14 @@ let unsubscribe (Socket socket) ~topic =
     Pub_sub.nn_sub Pub_sub.nn_sub_unsubscribe
     topic_ptr opt_length in
   raise_negative v
+
+(* helper function to set options *)
+let set_option (Socket s) ~option ~value =
+  let open Ctypes in
+  let opt_length = Unsigned.Size_t.max_int in
+  let value = Unsigned.Size_t.of_int value in
+  let option_ptr = to_voidp (allocate size_t value) in
+  raise_negative (
+    nn_setsockopt s nn_sol_socket option option_ptr opt_length
+  )
+
