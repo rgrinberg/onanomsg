@@ -10,7 +10,7 @@ let () =
   let packet = "foo bar baz" in
   let pub = socket ~domain:Af_sp ~sock_type:pub in
   let endpoint = Onanomsg.bind pub ~address in
-  let (`Read _) = Onanomsg.send pub packet in
+  Onanomsg.send pub packet;
   print_endline "published message";
   let recv_msg = Onanomsg.recv sub in
   print_endline "receiving in subscribers";

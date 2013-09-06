@@ -61,7 +61,7 @@ val bind : 'a Socket.t -> address:string -> endpoint
 
 val connect : 'a Socket.t -> address:string -> endpoint
 
-val send : ?block:bool -> 'a Socket.t -> string -> [> `Read of int ]
+val send : ?block:bool -> 'a Socket.t -> string -> unit
 
 val recv : ?block:bool -> 'a Socket.t -> string
 

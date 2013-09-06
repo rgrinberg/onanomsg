@@ -156,8 +156,7 @@ let send ?(block=true) (Socket socket) str =
   let flag = if block then 0 else nn_dontwait in
   let unsigned_length = Unsigned.Size_t.of_int (String.length str) in
   let read = nn_send socket str unsigned_length flag in
-  raise_negative read;
-  `Read read
+  raise_negative read
 
 let recv ?(block=true) (Socket socket) =
   let open Ctypes in
