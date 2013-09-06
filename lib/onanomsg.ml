@@ -137,6 +137,8 @@ let int_of_sock_type = function
 
 open Socket
 
+let fd (Socket fd) = fd
+
 let close (Socket socket) =
   let ret = nn_close socket in
   raise_not_zero ret

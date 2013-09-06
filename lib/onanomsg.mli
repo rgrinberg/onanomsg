@@ -69,3 +69,5 @@ val recv : ?block:bool -> 'a Socket.t -> string
 val subscribe : [< `Sub] Socket.t -> topic:string -> unit
 
 val unsubscribe : [< `Sub] Socket.t -> topic:string -> unit
+
+val fd : 'a Socket.t -> int
