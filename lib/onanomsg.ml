@@ -200,3 +200,6 @@ let set_linger socket = function
   | `Infinite -> set_option socket Ctypes.int ~option:nn_linger ~value:(-1)
   | `Milliseconds value -> 
       set_option socket Ctypes.int ~option:nn_linger ~value
+
+let set_send_buffer socket ~bytes =
+  set_option socket Ctypes.int ~option:nn_sndbuf ~value:bytes
