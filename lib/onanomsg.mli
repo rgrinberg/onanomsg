@@ -81,3 +81,5 @@ val set_send_buffer : 'a Socket.t -> bytes:int -> unit
 val set_recv_buffer : 'a Socket.t -> bytes:int -> unit
 
 val set_send_timeout : 'a Socket.t -> [< `Infinite | `Milliseconds of int] -> unit
+
+val set_recv_timeout : 'a Socket.t -> [< `Infinite | `Milliseconds of int] -> unit

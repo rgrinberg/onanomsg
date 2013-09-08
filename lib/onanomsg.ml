@@ -211,3 +211,6 @@ let set_recv_buffer socket ~bytes =
 
 let set_send_timeout socket v =
   set_option socket Ctypes.int ~option:nn_sndtimeo ~value:(inf_to_val v)
+
+let set_recv_timeout socket v =
+  set_option socket Ctypes.int ~option:nn_rcvtimeo ~value:(inf_to_val v)
