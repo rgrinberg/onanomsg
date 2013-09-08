@@ -20,7 +20,7 @@ Library nanomsg
 
 Executable test_nanomsg
   Path:               lib_test
-  MainIs:             run_tests.ml
+  MainIs:             test_reqrep.ml
   Build$:             flag(tests)
   Custom:             true
   CompiledObject:     best
