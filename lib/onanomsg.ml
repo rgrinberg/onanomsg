@@ -190,12 +190,13 @@ let unsubscribe (Socket socket) ~topic =
   raise_negative v
 
 (* helper function to set options *)
-let set_option (Socket s) ~option ~value =
+let set_option (Socket s) typ ~option ~value =
   let open Ctypes in
-  let opt_length = Unsigned.Size_t.max_int in
-  let value = Unsigned.Size_t.of_int value in
-  let option_ptr = to_voidp (allocate size_t value) in
-  raise_negative (
-    nn_setsockopt s nn_sol_socket option option_ptr opt_length
-  )
+  let opt_length = Unsigned.Size_t.of_int (sizeof typ) in
+  let option_ptr = to_voidp (allocate typ value) in
+  raise_negative (nn_setsockopt s nn_sol_socket option option_ptr opt_length)
 
+let set_linger socket = function
+  | `Infinite -> set_option socket Ctypes.int ~option:nn_linger ~value:(-1)
+  | `Milliseconds value -> 
+      set_option socket Ctypes.int ~option:nn_linger ~value

@@ -73,3 +73,5 @@ val subscribe : [< `Sub] Socket.t -> topic:string -> unit
 val unsubscribe : [< `Sub] Socket.t -> topic:string -> unit
 
 val fd : 'a Socket.t -> fd
+
+val set_linger : 'a Socket.t -> [< `Infinite | `Milliseconds of int] -> unit
