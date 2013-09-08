@@ -48,6 +48,15 @@ Executable test_pubsub
   BuildDepends:       nanomsg
   BuildTools:         ocamlbuild
 
+Executable test_opts
+  Path:               lib_test
+  MainIs:             test_opts.ml
+  Build$:             flag(tests)
+  Custom:             true
+  CompiledObject:     best
+  Install:            false
+  BuildDepends:       nanomsg
+  BuildTools:         ocamlbuild
 
 Test test_nanomsg
   Run$:               flag(tests)
