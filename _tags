@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: db6a97f706819668ae07f68b1149f51d)
+# DO NOT EDIT (digest: 39ba61e287908d25a12c9c677a8f358c)
 # Ignore VCS directories, you can use the same kind of rule outside 
 # OASIS_START/STOP if you want to exclude directories that contains 
 # useless stuff for the build process
@@ -31,11 +31,11 @@
 "lib/nanomsg.c": pkg_ctypes.foreign
 "lib/nanomsg.c": pkg_threads
 # Executable test_nanomsg
-<lib_test/run_tests.{native,byte}>: use_nanomsg
-<lib_test/run_tests.{native,byte}>: pkg_ctypes
-<lib_test/run_tests.{native,byte}>: pkg_ctypes.foreign
-<lib_test/run_tests.{native,byte}>: pkg_threads
-<lib_test/run_tests.{native,byte}>: custom
+<lib_test/test_reqrep.{native,byte}>: use_nanomsg
+<lib_test/test_reqrep.{native,byte}>: pkg_ctypes
+<lib_test/test_reqrep.{native,byte}>: pkg_ctypes.foreign
+<lib_test/test_reqrep.{native,byte}>: pkg_threads
+<lib_test/test_reqrep.{native,byte}>: custom
 # Executable test_endpoint
 <lib_test/test_endpoint.{native,byte}>: use_nanomsg
 <lib_test/test_endpoint.{native,byte}>: pkg_ctypes
