@@ -196,10 +196,18 @@ let set_option (Socket s) typ ~option ~value =
   let option_ptr = to_voidp (allocate typ value) in
   raise_negative (nn_setsockopt s nn_sol_socket option option_ptr opt_length)
 
-let set_linger socket = function
-  | `Infinite -> set_option socket Ctypes.int ~option:nn_linger ~value:(-1)
-  | `Milliseconds value -> 
-      set_option socket Ctypes.int ~option:nn_linger ~value
+let inf_to_val = function
+  | `Infinite -> -1
+  | `Milliseconds x -> x
+
+let set_linger socket v =
+  set_option socket Ctypes.int ~option:nn_linger ~value:(inf_to_val v)
 
 let set_send_buffer socket ~bytes =
   set_option socket Ctypes.int ~option:nn_sndbuf ~value:bytes
+
+let set_recv_buffer socket ~bytes =
+  set_option socket Ctypes.int ~option:nn_rcvbuf ~value:bytes
+
+let set_send_timeout socket v =
+  set_option socket Ctypes.int ~option:nn_sndtimeo ~value:(inf_to_val v)

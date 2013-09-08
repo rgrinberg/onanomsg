@@ -77,3 +77,7 @@ val fd : 'a Socket.t -> fd
 val set_linger : 'a Socket.t -> [< `Infinite | `Milliseconds of int] -> unit
 
 val set_send_buffer : 'a Socket.t -> bytes:int -> unit
+
+val set_recv_buffer : 'a Socket.t -> bytes:int -> unit
+
+val set_send_timeout : 'a Socket.t -> [< `Infinite | `Milliseconds of int] -> unit
