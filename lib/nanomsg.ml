@@ -129,7 +129,6 @@ let nn_allocmsg   = foreign ~from "nn_allocmsg" (size_t @-> int @-> returning (p
 let nn_freemsg    = foreign ~from "nn_freemsg" (ptr void @-> returning int)
 let nn_socket     = foreign ~from "nn_socket" (int @-> int @-> returning int)
 let nn_close      = foreign ~from "nn_close" (int @-> returning int)
-let nn_setsockopt = foreign ~from "nn_setsockopt" (int @-> int @-> int @-> (ptr void) @-> size_t @-> returning int)
 let nn_getsockopt = foreign ~from "nn_getsockopt" (int @-> int @-> int @-> (ptr void) @-> (ptr size_t) @-> returning int)
 let nn_bind       = foreign ~from "nn_bind" (int @-> string @-> returning int)
 let nn_connect    = foreign ~from "nn_connect" (int @-> string @-> returning int)
@@ -142,6 +141,9 @@ let nn_recv       = foreign ~from "nn_recv"
 let nn_sendmsg    = foreign ~from "nn_sendmsg" (int @-> ptr nn_msghdr @-> int @-> returning int)
 let nn_recvmsg    = foreign ~from "nn_recvmsg" (int @-> ptr nn_msghdr @-> int @-> returning int)
 let nn_device     = foreign ~from "nn_device" (int @-> int @-> returning int)
+
+let nn_setsockopt = foreign ~from "nn_setsockopt" 
+    (int @-> int @-> int @-> (ptr void) @-> size_t @-> returning int)
 
 let nn_recv_str = foreign ~from "nn_recv"
     (int @-> string @-> size_t @-> int @-> returning int)
