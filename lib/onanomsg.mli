@@ -83,3 +83,9 @@ val set_recv_buffer : 'a Socket.t -> bytes:int -> unit
 val set_send_timeout : 'a Socket.t -> [< `Infinite | `Milliseconds of int] -> unit
 
 val set_recv_timeout : 'a Socket.t -> [< `Infinite | `Milliseconds of int] -> unit
+
+val set_reconnect_interval : 'a Socket.t -> milliseconds:int -> unit
+
+val set_send_priority : 'a Socket.t -> priority:int -> unit 
+
+val set_ipv4_only : 'a Socket.t -> bool -> unit

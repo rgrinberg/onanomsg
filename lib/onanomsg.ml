@@ -214,3 +214,19 @@ let set_send_timeout socket v =
 
 let set_recv_timeout socket v =
   set_option socket Ctypes.int ~option:nn_rcvtimeo ~value:(inf_to_val v)
+
+let set_reconnect_interval socket ~milliseconds =
+  set_option socket Ctypes.int ~option:nn_reconnect_ivl ~value:milliseconds
+
+let set_send_priority socket ~priority =
+  if priority >= 1 || priority <= 16 then
+    set_option socket Ctypes.int ~option:nn_sndprio ~value:priority
+  else
+    invalid_arg (
+      Printf.sprintf "set_send_priority: priority(%d) must be between [1,16]" 
+      priority
+    )
+
+let set_ipv4_only socket v =
+  let value = if v then 1 else 0 in
+  set_option socket Ctypes.int ~option:nn_ipv4only ~value
