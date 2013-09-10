@@ -168,7 +168,7 @@ let recv ?(block=true) (Socket socket) =
   let read = nn_recv socket s nn_msg flag in
   raise_negative read;
   match !@ s with
-  | None -> failwith "TEMP STUFF"
+  | None -> assert false
   | Some x -> x
 
 let subscribe (Socket socket) ~topic =
