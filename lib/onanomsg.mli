@@ -45,6 +45,27 @@ type fd = private int
 module Socket : sig
   type 'a t
   type 'a kind
+
+  type recv = [
+    | `Pair
+    | `Sub
+    | `Req
+    | `Rep
+    | `Pull
+    | `Surveyor
+    | `Respondent
+    | `Bus ]
+
+  type send = [
+    | `Pair
+    | `Pub
+    | `Req
+    | `Rep
+    | `Push
+    | `Surveyor
+    | `Respondent
+    | `Bus ]
+
   val pair       : [> `Pair] kind
   val pub        : [> `Pub] kind
   val sub        : [> `Sub] kind
@@ -64,13 +85,13 @@ val bind : 'a Socket.t -> address:string -> endpoint
 
 val connect : 'a Socket.t -> address:string -> endpoint
 
-val send : ?block:bool -> 'a Socket.t -> string -> unit
+val send : ?block:bool -> Socket.send Socket.t -> string -> unit
 
-val recv : ?block:bool -> 'a Socket.t -> string
+val recv : ?block:bool -> Socket.recv Socket.t -> string
 
-val subscribe : [< `Sub] Socket.t -> topic:string -> unit
+val subscribe : [> `Sub] Socket.t -> topic:string -> unit
 
-val unsubscribe : [< `Sub] Socket.t -> topic:string -> unit
+val unsubscribe : [> `Sub] Socket.t -> topic:string -> unit
 
 val fd : 'a Socket.t -> fd
 

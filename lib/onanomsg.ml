@@ -108,6 +108,26 @@ module Socket = struct
   type 'a t = Socket of int
   type 'a kind = int
 
+  type recv = [
+    | `Pair
+    | `Sub
+    | `Req
+    | `Rep
+    | `Pull
+    | `Surveyor
+    | `Respondent
+    | `Bus ]
+
+  type send = [
+    | `Pair
+    | `Pub
+    | `Req
+    | `Rep
+    | `Push
+    | `Surveyor
+    | `Respondent
+    | `Bus ]
+
   let pair       = Pair.nn_pair
   let pub        = Pub_sub.nn_pub
   let sub        = Pub_sub.nn_sub
