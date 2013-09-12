@@ -45,3 +45,7 @@ likely to change in the future.
 - Wrap getsockopt
 - Add support for devices
 - Get rid of oasis
+
+## License
+
+Onanomsg is licensed under the [WTFPL](http://www.wtfpl.net/). See LICENSE.

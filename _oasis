@@ -3,7 +3,7 @@ Name:        nanomsg
 Version:     0.0.1
 Synopsis:    bindings to the nanomsg library
 Authors:     Rudi Grinberg
-License:     MIT
+License:     WTFPL
 Plugins:     META (0.3)
 BuildTools: ocamlbuild
 
