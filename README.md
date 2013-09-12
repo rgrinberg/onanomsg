@@ -39,3 +39,7 @@ let () =
 
 For now these bindings are as close possible to the C interface but that is
 likely to change in the future.
+
+## TODO
+- Wrap getsockopt
+- Get rid of oasis
