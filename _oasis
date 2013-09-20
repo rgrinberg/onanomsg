@@ -58,6 +58,16 @@ Executable test_opts
   BuildDepends:       nanomsg
   BuildTools:         ocamlbuild
 
+Executable pipeline
+  Path:               examples
+  MainIs:             pipeline.ml
+  Build$:             flag(tests)
+  Custom:             true
+  CompiledObject:     best
+  Install:            false
+  BuildDepends:       nanomsg
+  BuildTools:         ocamlbuild
+
 Test test_nanomsg
   Run$:               flag(tests)
   Command:            $test_nanomsg

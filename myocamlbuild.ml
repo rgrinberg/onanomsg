@@ -1,5 +1,5 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 461f35ef19fbe9b1e686ed320e399f4a) *)
+(* DO NOT EDIT (digest: bf8ef0f34c9bc4a71f467367832aa745) *)
 module OASISGettext = struct
 (* # 21 "src/oasis/OASISGettext.ml" *)
 
