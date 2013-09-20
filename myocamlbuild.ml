@@ -495,7 +495,7 @@ let package_default =
           (["oasis_library_nanomsg_dlllib"; "link"; "byte"],
             [(OASISExpr.EBool true, S [A "-dllib"; P "-lnanomsg_stubs"])])
        ];
-     includes = [("lib_test", ["lib"])];
+     includes = [("lib_test", ["lib"]); ("examples", ["lib"])];
      }
   ;;
 
