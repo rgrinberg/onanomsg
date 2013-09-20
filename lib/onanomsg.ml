@@ -145,6 +145,8 @@ module Socket = struct
     Socket ret
 end
 
+let socket = Socket.socket
+
 let int_of_sock_type = function
   | `Pair -> Pair.nn_pair
   | `Pub -> Pub_sub.nn_pub

@@ -76,8 +76,11 @@ module Socket : sig
   val surveyor   : [> `Surveyor] kind
   val respondent : [> `Respondent] kind
   val bus        : [> `Bus] kind
+  (* TODO get rid of this one *)
   val socket : domain:Domain.t -> sock_type:('a kind) -> 'a t
 end
+
+val socket : domain:Domain.t -> sock_type:('a Socket.kind) -> 'a Socket.t
 
 val close : 'a Socket.t -> unit
 
