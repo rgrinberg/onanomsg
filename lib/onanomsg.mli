@@ -88,6 +88,8 @@ val bind : 'a Socket.t -> address:string -> endpoint
 
 val connect : 'a Socket.t -> address:string -> endpoint
 
+val shutdown : 'a Socket.t -> endpoint -> unit
+
 val send : ?block:bool -> Socket.send Socket.t -> string -> unit
 
 val recv : ?block:bool -> Socket.recv Socket.t -> string

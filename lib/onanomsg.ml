@@ -177,6 +177,8 @@ let connect (Socket socket) ~address =
   raise_negative endpoint;
   Endpoint endpoint
 
+let shutdown (Socket s) (Endpoint e) = raise_negative (nn_shutdown s e)
+
 let send ?(block=true) (Socket socket) str =
   let flag = if block then 0 else nn_dontwait in
   let unsigned_length = Unsigned.Size_t.of_int (String.length str) in
