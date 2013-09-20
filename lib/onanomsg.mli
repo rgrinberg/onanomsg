@@ -90,9 +90,9 @@ val connect : 'a Socket.t -> address:string -> endpoint
 
 val shutdown : 'a Socket.t -> endpoint -> unit
 
-val send : ?block:bool -> Socket.send Socket.t -> string -> unit
+val send : ?block:bool -> [> Socket.send] Socket.t -> string -> unit
 
-val recv : ?block:bool -> Socket.recv Socket.t -> string
+val recv : ?block:bool -> [> Socket.recv] Socket.t -> string
 
 val subscribe : [> `Sub] Socket.t -> topic:string -> unit
 
