@@ -254,3 +254,5 @@ let set_send_priority socket ~priority =
 let set_ipv4_only socket v =
   let value = if v then 1 else 0 in
   set_option socket Ctypes.int ~option:nn_ipv4only ~value
+
+let term = nn_term

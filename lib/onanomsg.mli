@@ -115,3 +115,5 @@ val set_reconnect_interval : 'a Socket.t -> milliseconds:int -> unit
 val set_send_priority : 'a Socket.t -> priority:int -> unit 
 
 val set_ipv4_only : 'a Socket.t -> bool -> unit
+
+val term : unit -> unit
