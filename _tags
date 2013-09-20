@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: 9960b9d4776c836238baf8d844152ba0)
+# DO NOT EDIT (digest: e1e1d3c6315a1e931f658f858d2ba3f1)
 # Ignore VCS directories, you can use the same kind of rule outside 
 # OASIS_START/STOP if you want to exclude directories that contains 
 # useless stuff for the build process
@@ -63,10 +63,16 @@
 <examples/pipeline.{native,byte}>: pkg_ctypes
 <examples/pipeline.{native,byte}>: pkg_ctypes.foreign
 <examples/pipeline.{native,byte}>: pkg_threads
+<examples/pipeline.{native,byte}>: custom
+# Executable reqrep
+<examples/reqrep.{native,byte}>: use_nanomsg
+<examples/reqrep.{native,byte}>: pkg_ctypes
+<examples/reqrep.{native,byte}>: pkg_ctypes.foreign
+<examples/reqrep.{native,byte}>: pkg_threads
 <examples/*.ml{,i}>: use_nanomsg
 <examples/*.ml{,i}>: pkg_ctypes
 <examples/*.ml{,i}>: pkg_ctypes.foreign
 <examples/*.ml{,i}>: pkg_threads
-<examples/pipeline.{native,byte}>: custom
+<examples/reqrep.{native,byte}>: custom
 # OASIS_STOP
 true: debug

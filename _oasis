@@ -68,6 +68,16 @@ Executable pipeline
   BuildDepends:       nanomsg
   BuildTools:         ocamlbuild
 
+Executable reqrep
+  Path:               examples
+  MainIs:             reqrep.ml
+  Build$:             flag(tests)
+  Custom:             true
+  CompiledObject:     best
+  Install:            false
+  BuildDepends:       nanomsg
+  BuildTools:         ocamlbuild
+
 Test test_nanomsg
   Run$:               flag(tests)
   Command:            $test_nanomsg
