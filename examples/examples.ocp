@@ -1,0 +1,21 @@
+begin program "pair"
+  files = ["pair.ml"]
+  requires = ["onanomsg"]
+end
+
+begin program "pipeline"
+  files = ["pipeline.ml"]
+  requires = ["onanomsg"]
+end
+
+begin program "reqrep"
+  files = ["reqrep.ml"]
+  requires = ["onanomsg"]
+end
+
+(*
+begin program "survey"
+  files = ["survey.ml"]
+  requires = ["onanomsg"]
+end
+*)
