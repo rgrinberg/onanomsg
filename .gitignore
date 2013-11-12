@@ -1,6 +1,5 @@
 *.native
 _build/**
-Makefile
 *.log
 *.data
 *.vim
