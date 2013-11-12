@@ -4,15 +4,14 @@ Ctypes based bindings to nanomsg for OCaml (alpha)
 
 ## Installation
 
-Currently you must have the HEAD version of ctypes. Because of the reliance
-on `string_opt`
-
-Please install [nanomsg](https://github.com/250bpm/nanomsg) first.
+The dependencies are:
+* ctypes > 0.2
+* ocp-build
+* nanomsg - [nanomsg](https://github.com/250bpm/nanomsg)
 
 ```
-ocaml setup.ml -configure
-ocaml setup.ml -all
-ocaml setup.ml -install
+make # no errors hopefully
+make install
 ```
 
 ## Example
@@ -44,7 +43,7 @@ likely to change in the future.
 - Set socket type specific options
 - Wrap getsockopt
 - Add support for devices
-- Get rid of oasis
+- Fix reqrep
 
 ## License
 
