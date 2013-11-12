@@ -81,4 +81,3 @@
 <examples/*.ml{,i}>: pkg_threads
 <examples/pair.{native,byte}>: custom
 # OASIS_STOP
-true: debug
