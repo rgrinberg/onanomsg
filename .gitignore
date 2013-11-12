@@ -4,3 +4,7 @@ Makefile
 *.log
 *.data
 *.vim
+*.old
+*.native
+_obuild/**
+ocp-build.root
