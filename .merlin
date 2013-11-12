@@ -3,6 +3,12 @@ PKG ctypes.foreign
 S lib
 S lib_test
 S examples
-B _build/lib
-B _build/lib_test
-B _build/examples
+
+B _obuild/onanomsg
+B _obuild/test_pubsub
+B _obuild/test_endpoint
+B _obuild/test_reqrep
+B _obuild/pair
+B _obuild/pipeline
+B _obuild/test_opts
+B _obuild/reqrep
