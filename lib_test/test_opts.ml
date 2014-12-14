@@ -7,9 +7,9 @@ let () =
   let _ = connect sub address in
   set_linger sub (`Milliseconds 2000);
   set_linger sub `Infinite;
-  set_send_buffer sub ~bytes:100;
-  set_recv_buffer sub ~bytes:100;
-  subscribe sub ~topic:"";
+  set_send_buffer sub 100;
+  set_recv_buffer sub 100;
+  subscribe sub "";
   print_endline "Connecting subscriber";
   let packet = "foo bar baz" in
   let pub = socket ~domain:AF_SP ~proto:Pub in

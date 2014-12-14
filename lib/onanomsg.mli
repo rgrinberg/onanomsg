@@ -65,18 +65,18 @@ val close : socket -> unit
 
 (** {1 Publish-Subscribe} *)
 
-val subscribe : socket -> topic:string -> unit
-val unsubscribe : socket -> topic:string -> unit
+val subscribe : socket -> string -> unit
+val unsubscribe : socket -> string -> unit
 
 (** {1 Set socket options} *)
 
 val set_linger : socket -> [< `Infinite | `Milliseconds of int] -> unit
-val set_send_buffer : socket -> bytes:int -> unit
-val set_recv_buffer : socket -> bytes:int -> unit
+val set_send_buffer : socket -> int -> unit
+val set_recv_buffer : socket -> int -> unit
 val set_send_timeout : socket -> [< `Infinite | `Milliseconds of int] -> unit
 val set_recv_timeout : socket -> [< `Infinite | `Milliseconds of int] -> unit
-val set_reconnect_interval : socket -> milliseconds:int -> unit
-val set_send_priority : socket -> priority:int -> unit
+val set_reconnect_interval : socket -> int -> unit
+val set_send_priority : socket -> int -> unit
 val set_ipv4_only : socket -> bool -> unit
 
 (** {1 Misc.} *)

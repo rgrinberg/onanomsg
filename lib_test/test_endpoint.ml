@@ -7,8 +7,8 @@ let () =
                  , socket ~domain:AF_SP ~proto:Sub) in
   let (_, _) = (connect sub1 addr1
                , connect sub2 addr2) in
-  subscribe sub1 ~topic:"";
-  subscribe sub2 ~topic:"";
+  subscribe sub1 "";
+  subscribe sub2 "";
   print_endline "connected subscribers";
   let packet = "one two three" in
   let pub = socket ~domain:AF_SP ~proto:Sub in

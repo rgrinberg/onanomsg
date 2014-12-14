@@ -4,7 +4,7 @@ let () =
   let address = `Inproc "t2" in
   let sub = socket ~domain:AF_SP ~proto:Sub in
   let (_:[< `Endpoint of int]) = connect sub address in
-  subscribe sub ~topic:"";
+  subscribe sub "";
   print_endline "Connecting subscriber";
   let packet = "foo bar baz" in
   let pub = socket ~domain:AF_SP ~proto:Pub in

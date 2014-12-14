@@ -129,14 +129,14 @@ let recv ?(block=true) socket =
   | None -> assert false
   | Some x -> x
 
-let subscribe socket ~topic =
+let subscribe socket topic =
   let open Ctypes in
   let opt_length = Unsigned.Size_t.of_int (String.length topic) in
   let topic_ptr = to_voidp (allocate string topic) in
   let v = nn_setsockopt socket (proto_to_enum Sub) 1 topic_ptr opt_length in
   raise_negative v
 
-let unsubscribe socket ~topic =
+let unsubscribe socket topic =
   let open Ctypes in
   let opt_length = Unsigned.Size_t.of_int (String.length topic) in
   let topic_ptr = to_voidp (allocate string topic) in
@@ -157,11 +157,11 @@ let inf_to_val = function
 let set_linger socket v =
   set_option socket Ctypes.int ~option:nn_linger ~value:(inf_to_val v)
 
-let set_send_buffer socket ~bytes =
-  set_option socket Ctypes.int ~option:nn_sndbuf ~value:bytes
+let set_send_buffer socket size =
+  set_option socket Ctypes.int ~option:nn_sndbuf ~value:size
 
-let set_recv_buffer socket ~bytes =
-  set_option socket Ctypes.int ~option:nn_rcvbuf ~value:bytes
+let set_recv_buffer socket size =
+  set_option socket Ctypes.int ~option:nn_rcvbuf ~value:size
 
 let set_send_timeout socket v =
   set_option socket Ctypes.int ~option:nn_sndtimeo ~value:(inf_to_val v)
@@ -169,10 +169,10 @@ let set_send_timeout socket v =
 let set_recv_timeout socket v =
   set_option socket Ctypes.int ~option:nn_rcvtimeo ~value:(inf_to_val v)
 
-let set_reconnect_interval socket ~milliseconds =
+let set_reconnect_interval socket milliseconds =
   set_option socket Ctypes.int ~option:nn_reconnect_ivl ~value:milliseconds
 
-let set_send_priority socket ~priority =
+let set_send_priority socket priority =
   if priority >= 1 || priority <= 16 then
     set_option socket Ctypes.int ~option:nn_sndprio ~value:priority
   else
