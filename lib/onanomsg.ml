@@ -99,19 +99,21 @@ let addr_of_string s =
 
 let socket ~domain ~proto = nn_socket (domain_to_enum domain) (proto_to_enum proto)
 
+type eid = int
+
 let bind socket addr =
   let addr = string_of_addr addr in
   let endpoint = nn_bind socket addr in
   raise_negative endpoint;
-  `Endpoint endpoint
+  endpoint
 
 let connect socket addr =
   let addr = string_of_addr addr in
   let endpoint = nn_connect socket addr in
   raise_negative endpoint;
-  `Endpoint endpoint
+  endpoint
 
-let shutdown s (`Endpoint e) = raise_negative (nn_shutdown s e)
+let shutdown s e = raise_negative (nn_shutdown s e)
 
 let send ?(block=true) socket msg =
   let flag = if block then 0 else nn_dontwait in

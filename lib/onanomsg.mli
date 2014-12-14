@@ -33,34 +33,23 @@ type error =
 exception Error of error * string
 
 type domain = AF_SP | AF_SP_RAW
-
-type proto =
-  | Pair
-  | Pub
-  | Sub
-  | Req
-  | Rep
-  | Push
-  | Pull
-  | Surveyor
-  | Respondant
-  | Bus
-
-type socket
-
+type proto = Pair | Pub | Sub | Req | Rep | Push | Pull | Surveyor | Respondant | Bus
 type addr = [`Inproc of string | `Ipc of string | `Tcp of Ipaddr.t * int]
+type socket
+type eid
+
 val string_of_addr : addr -> string
 val addr_of_string : string -> addr
 
 val socket : domain:domain -> proto:proto -> socket
 
-val bind : socket -> addr -> [`Endpoint of int]
-val connect : socket -> addr -> [`Endpoint of int]
+val bind : socket -> addr -> eid
+val connect : socket -> addr -> eid
 
 val send : ?block:bool -> socket -> string -> unit
 val recv : ?block:bool -> socket -> string
 
-val shutdown : socket -> [`Endpoint of int] -> unit
+val shutdown : socket -> eid -> unit
 val close : socket -> unit
 
 (** {1 Publish-Subscribe} *)
