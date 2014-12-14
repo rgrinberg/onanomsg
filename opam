@@ -8,4 +8,7 @@ depends: [
   "ocamlfind" {build}
   "conf-nanomsg"
   "ctypes" {>= "0.2"}
+  "ipaddr"
+  "ppx_deriving"
+  "lwt"
 ]
