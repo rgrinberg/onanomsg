@@ -1,6 +1,6 @@
 version = "0.1"
 description = "Bindings to the nanomsg library"
-requires = "ctypes.foreign"
+requires = "ctypes.foreign ipaddr"
 archive(byte) = "onanomsg.cma"
 archive(byte, plugin) = "onanomsg.cma"
 archive(native) = "onanomsg.cmxa"

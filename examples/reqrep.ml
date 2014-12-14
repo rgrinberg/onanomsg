@@ -1,11 +1,10 @@
 open Onanomsg
-module D = Domain
 let printf = Printf.printf
 
 let node0 addr =
   printf "node0: %s\n" @@ string_of_addr addr;
   flush_all ();
-  let s = Socket.socket ~domain:D.Af_sp ~sock_type:Socket.rep in
+  let s = socket ~domain:AF_SP ~proto:Rep in
   ignore (bind s addr);
   print_endline "starting to listen";
   printf "NODE0: RECEIVED '%s'\n" (Onanomsg.recv s);
@@ -15,7 +14,7 @@ let node0 addr =
 
 let node1 addr msg =
   printf "node1: %s\n" @@ string_of_addr addr;
-  let s = Socket.socket ~domain:D.Af_sp ~sock_type:Socket.req in
+  let s = socket ~domain:AF_SP ~proto:Req in
   let endpoint = connect s addr in
   printf "NODE1: SENDING '%s'\n" msg;
   Onanomsg.send s msg;

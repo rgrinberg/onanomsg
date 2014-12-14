@@ -1,7 +1,7 @@
 open Nanomsg
 
 type error =
-  | E_NOT_SUP
+  | E_NOT_SUP [@value 156384713]
   | E_PROTO_NO_SUPPORT
   | E_NO_BUFFS
   | E_NET_DOWN
@@ -28,142 +28,44 @@ type error =
   | E_CONN_RESET
   | E_NO_PROTO_OPT
   | E_IS_CONN
-  | E_TERM
+  | E_TERM [@value 156384765]
   | E_FSM
-  | E_UNKNOWN (* NOT nanomsg error *)
-
-let error_of_int i = match i with
-  | _ when i = enotsup         -> E_NOT_SUP
-  | _ when i = eprotonosupport -> E_PROTO_NO_SUPPORT
-  | _ when i = enobufs         -> E_NO_BUFFS
-  | _ when i = enetdown        -> E_NET_DOWN
-  | _ when i = eaddrinuse      -> E_ADDR_IN_USE
-  | _ when i = eaddrnotavail   -> E_ADDR_NOT_AVAIL
-  | _ when i = econnrefused    -> E_CONN_REFUSED
-  | _ when i = einprogress     -> E_IN_PROGRESS
-  | _ when i = enotsock        -> E_NOT_SOCK
-  | _ when i = eafnosupport    -> E_AF_NO_SUPPORT
-  | _ when i = eproto          -> E_PROTO
-  | _ when i = eagain          -> E_AGAIN
-  | _ when i = ebadf           -> E_BAD_F
-  | _ when i = einval          -> E_INVAL
-  | _ when i = emfile          -> E_MFILE
-  | _ when i = efault          -> E_FAULT
-  | _ when i = eaccess         -> E_ACCCESS
-  | _ when i = enetreset       -> E_NET_RESET
-  | _ when i = enetunreach     -> E_NET_UNREACH
-  | _ when i = ehostunreach    -> E_HOST_UNREACH
-  | _ when i = enotconn        -> E_NOT_CONN
-  | _ when i = emsgsize        -> E_MSG_SIZE
-  | _ when i = etimedout       -> E_TIMED_OUT
-  | _ when i = econnaborted    -> E_CONN_ABORTED
-  | _ when i = econnreset      -> E_CONN_RESET
-  | _ when i = enoprotoopt     -> E_NO_PROTO_OPT
-  | _ when i = eisconn         -> E_IS_CONN
-  | _ when i = eterm           -> E_TERM
-  | _ when i = efsm            -> E_FSM
-  | _ -> E_UNKNOWN
+  | E_UNKNOWN (* NOT nanomsg error *) [@@deriving enum]
 
 exception Error of error * string
 
-module Domain = struct
-  type t =
-    | Af_sp
-    | Af_sp_raw
+type domain = AF_SP [@value 1] | AF_SP_RAW [@@deriving enum]
 
-  let to_int = function
-    | Af_sp -> af_sp
-    | Af_sp_raw -> af_sp_raw
-end
+type proto =
+  | Pair [@value 16]
+  | Pub [@value 32]
+  | Sub [@value 33]
+  | Req [@value 48]
+  | Rep [@value 49]
+  | Push [@value 80]
+  | Pull [@value 81]
+  | Surveyor [@value 96]
+  | Respondant [@value 97]
+  | Bus [@value 112]
+      [@@deriving enum]
 
-type sock_type = [
-  | `Pair (* pair *)
-  | `Pub (* pub sub *)
-  | `Sub
-  | `Req (* req rep *)
-  | `Rep
-  | `Push (* pipeline *)
-  | `Pull
-  | `Surveyor (* survey *)
-  | `Respondent
-  | `Bus ] (* bus *)
+type socket = int
 
-let current_error () = 
+let current_error () =
   let current_error_code = nn_errno () in
   (current_error_code, nn_strerror current_error_code)
 
-let throw_current_error () = 
+let throw_current_error () =
   let (code, err_string) = current_error () in
-  raise (Error (error_of_int code, err_string))
+  raise (Error ((match error_of_enum code with
+      | Some e -> e
+      | None -> E_UNKNOWN), err_string))
 
 let raise_if ~cond v = if cond v then throw_current_error ()
 let raise_negative = raise_if ~cond:(fun x -> x < 0)
 let raise_not_zero = raise_if ~cond:(fun x -> x <> 0)
 
-type endpoint = Endpoint of int
-
-type fd = int
-
-module Socket = struct
-  type 'a t = Socket of int
-  type 'a kind = int
-
-  type recv = [
-    | `Pair
-    | `Sub
-    | `Req
-    | `Rep
-    | `Pull
-    | `Surveyor
-    | `Respondent
-    | `Bus ]
-
-  type send = [
-    | `Pair
-    | `Pub
-    | `Req
-    | `Rep
-    | `Push
-    | `Surveyor
-    | `Respondent
-    | `Bus ]
-
-  let pair       = Pair.nn_pair
-  let pub        = Pub_sub.nn_pub
-  let sub        = Pub_sub.nn_sub
-  let req        = Req_rep.nn_req
-  let rep        = Req_rep.nn_rep
-  let push       = Pipeline.nn_push
-  let pull       = Pipeline.nn_pull
-  let surveyor   = Survey.nn_surveyor
-  let respondent = Survey.nn_respondent
-  let bus        = Bus.nn_bus
-
-  let socket ~domain ~sock_type =
-    let ret = nn_socket (Domain.to_int domain) sock_type in
-    raise_negative ret;
-    Socket ret
-end
-
-let socket = Socket.socket
-
-let int_of_sock_type = function
-  | `Pair -> Pair.nn_pair
-  | `Pub -> Pub_sub.nn_pub
-  | `Sub -> Pub_sub.nn_sub
-  | `Req -> Req_rep.nn_req
-  | `Rep -> Req_rep.nn_rep
-  | `Push -> Pipeline.nn_push
-  | `Pull -> Pipeline.nn_pull
-  | `Surveyor -> Survey.nn_surveyor
-  | `Respondent -> Survey.nn_respondent
-  | `Bus -> Bus.nn_bus
-
-open Socket
-
-let fd (Socket fd) = fd
-
-let close (Socket socket) =
+let close socket =
   let ret = nn_close socket in
   raise_not_zero ret
 
@@ -195,27 +97,29 @@ let addr_of_string s =
     `Tcp (addr, port)
   | _ -> invalid_arg "addr_of_string"
 
-let bind (Socket socket) addr =
+let socket ~domain ~proto = nn_socket (domain_to_enum domain) (proto_to_enum proto)
+
+let bind socket addr =
   let addr = string_of_addr addr in
   let endpoint = nn_bind socket addr in
   raise_negative endpoint;
-  Endpoint endpoint
+  `Endpoint endpoint
 
-let connect (Socket socket) addr =
+let connect socket addr =
   let addr = string_of_addr addr in
   let endpoint = nn_connect socket addr in
   raise_negative endpoint;
-  Endpoint endpoint
+  `Endpoint endpoint
 
-let shutdown (Socket s) (Endpoint e) = raise_negative (nn_shutdown s e)
+let shutdown s (`Endpoint e) = raise_negative (nn_shutdown s e)
 
-let send ?(block=true) (Socket socket) str =
+let send ?(block=true) socket msg =
   let flag = if block then 0 else nn_dontwait in
-  let unsigned_length = Unsigned.Size_t.of_int (String.length str) in
-  let read = nn_send socket str unsigned_length flag in
+  let unsigned_length = Unsigned.Size_t.of_int (String.length msg) in
+  let read = nn_send socket msg unsigned_length flag in
   raise_negative read
 
-let recv ?(block=true) (Socket socket) =
+let recv ?(block=true) socket =
   let open Ctypes in
   let flag = if block then 0 else nn_dontwait in
   let s = allocate string_opt None in
@@ -225,26 +129,22 @@ let recv ?(block=true) (Socket socket) =
   | None -> assert false
   | Some x -> x
 
-let subscribe (Socket socket) ~topic =
+let subscribe socket ~topic =
   let open Ctypes in
   let opt_length = Unsigned.Size_t.of_int (String.length topic) in
   let topic_ptr = to_voidp (allocate string topic) in
-  let v = nn_setsockopt socket 
-    Pub_sub.nn_sub Pub_sub.nn_sub_subscribe
-    topic_ptr opt_length in
+  let v = nn_setsockopt socket (proto_to_enum Sub) 1 topic_ptr opt_length in
   raise_negative v
 
-let unsubscribe (Socket socket) ~topic =
+let unsubscribe socket ~topic =
   let open Ctypes in
   let opt_length = Unsigned.Size_t.of_int (String.length topic) in
   let topic_ptr = to_voidp (allocate string topic) in
-  let v = nn_setsockopt socket 
-    Pub_sub.nn_sub Pub_sub.nn_sub_unsubscribe
-    topic_ptr opt_length in
+  let v = nn_setsockopt socket (proto_to_enum Sub) 2 topic_ptr opt_length in
   raise_negative v
 
 (* helper function to set options *)
-let set_option (Socket s) typ ~option ~value =
+let set_option s typ ~option ~value =
   let open Ctypes in
   let opt_length = Unsigned.Size_t.of_int (sizeof typ) in
   let option_ptr = to_voidp (allocate typ value) in

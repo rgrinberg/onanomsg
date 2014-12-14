@@ -32,92 +32,53 @@ type error =
 
 exception Error of error * string
 
-module Domain : sig 
-  type t = 
-    | Af_sp 
-    | Af_sp_raw 
-end
+type domain = AF_SP | AF_SP_RAW
 
-type endpoint
+type proto =
+  | Pair
+  | Pub
+  | Sub
+  | Req
+  | Rep
+  | Push
+  | Pull
+  | Surveyor
+  | Respondant
+  | Bus
 
-type fd = private int 
-
-module Socket : sig
-  type 'a t
-  type 'a kind
-
-  type recv = [
-    | `Pair
-    | `Sub
-    | `Req
-    | `Rep
-    | `Pull
-    | `Surveyor
-    | `Respondent
-    | `Bus ]
-
-  type send = [
-    | `Pair
-    | `Pub
-    | `Req
-    | `Rep
-    | `Push
-    | `Surveyor
-    | `Respondent
-    | `Bus ]
-
-  val pair       : [> `Pair] kind
-  val pub        : [> `Pub] kind
-  val sub        : [> `Sub] kind
-  val req        : [> `Req] kind
-  val rep        : [> `Rep] kind
-  val push       : [> `Push] kind
-  val pull       : [> `Pull] kind
-  val surveyor   : [> `Surveyor] kind
-  val respondent : [> `Respondent] kind
-  val bus        : [> `Bus] kind
-  (* TODO get rid of this one *)
-  val socket : domain:Domain.t -> sock_type:('a kind) -> 'a t
-end
+type socket
 
 type addr = [`Inproc of string | `Ipc of string | `Tcp of Ipaddr.t * int]
 val string_of_addr : addr -> string
 val addr_of_string : string -> addr
 
-val socket : domain:Domain.t -> sock_type:('a Socket.kind) -> 'a Socket.t
+val socket : domain:domain -> proto:proto -> socket
 
-val close : 'a Socket.t -> unit
+val bind : socket -> addr -> [`Endpoint of int]
+val connect : socket -> addr -> [`Endpoint of int]
 
-val bind : 'a Socket.t -> addr -> endpoint
+val send : ?block:bool -> socket -> string -> unit
+val recv : ?block:bool -> socket -> string
 
-val connect : 'a Socket.t -> addr -> endpoint
+val shutdown : socket -> [`Endpoint of int] -> unit
+val close : socket -> unit
 
-val shutdown : 'a Socket.t -> endpoint -> unit
+(** {1 Publish-Subscribe} *)
 
-val send : ?block:bool -> [> Socket.send] Socket.t -> string -> unit
+val subscribe : socket -> topic:string -> unit
+val unsubscribe : socket -> topic:string -> unit
 
-val recv : ?block:bool -> [> Socket.recv] Socket.t -> string
+(** {1 Set socket options} *)
 
-val subscribe : [> `Sub] Socket.t -> topic:string -> unit
+val set_linger : socket -> [< `Infinite | `Milliseconds of int] -> unit
+val set_send_buffer : socket -> bytes:int -> unit
+val set_recv_buffer : socket -> bytes:int -> unit
+val set_send_timeout : socket -> [< `Infinite | `Milliseconds of int] -> unit
+val set_recv_timeout : socket -> [< `Infinite | `Milliseconds of int] -> unit
+val set_reconnect_interval : socket -> milliseconds:int -> unit
+val set_send_priority : socket -> priority:int -> unit
+val set_ipv4_only : socket -> bool -> unit
 
-val unsubscribe : [> `Sub] Socket.t -> topic:string -> unit
-
-val fd : 'a Socket.t -> fd
-
-val set_linger : 'a Socket.t -> [< `Infinite | `Milliseconds of int] -> unit
-
-val set_send_buffer : 'a Socket.t -> bytes:int -> unit
-
-val set_recv_buffer : 'a Socket.t -> bytes:int -> unit
-
-val set_send_timeout : 'a Socket.t -> [< `Infinite | `Milliseconds of int] -> unit
-
-val set_recv_timeout : 'a Socket.t -> [< `Infinite | `Milliseconds of int] -> unit
-
-val set_reconnect_interval : 'a Socket.t -> milliseconds:int -> unit
-
-val set_send_priority : 'a Socket.t -> priority:int -> unit 
-
-val set_ipv4_only : 'a Socket.t -> bool -> unit
+(** {1 Misc.} *)
 
 val term : unit -> unit

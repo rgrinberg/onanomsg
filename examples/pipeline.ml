@@ -1,9 +1,8 @@
 open Onanomsg
-module D = Domain
 let printf = Printf.printf
 
 let node0 addr =
-  let s = Socket.socket ~domain:D.Af_sp ~sock_type:Socket.pull in
+  let s = socket ~domain:AF_SP ~proto:Pull in
   ignore (bind s addr);
   while true do
     printf "NODE0: RECEIVED '%s'\n" (Onanomsg.recv s);
@@ -11,7 +10,7 @@ let node0 addr =
   done
 
 let node1 addr msg =
-  let s = Socket.socket ~domain:D.Af_sp ~sock_type:Socket.push in
+  let s = socket ~domain:AF_SP ~proto:Push in
   let endpoint = connect s addr in
   printf "NODE1: SENDING '%s'\n" msg;
   Onanomsg.send s msg;

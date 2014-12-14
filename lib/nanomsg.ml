@@ -1,9 +1,6 @@
 open Ctypes
 open Foreign
 
-let af_sp                = 1
-let af_sp_raw            = 2
-
 let nn_sockaddr_max      = 128
 let nn_sol_socket        = 0
 
@@ -23,38 +20,6 @@ let nn_protocol          = 13
 let nn_ipv4only          = 14
 (* send/recv options *)
 let nn_dontwait          = 1
-
-let nn_hausnumero        = 156384712
-let enotsup              = (nn_hausnumero + 1)
-let eprotonosupport      = (nn_hausnumero + 2)
-let enobufs              = (nn_hausnumero + 3)
-let enetdown             = (nn_hausnumero + 4)
-let eaddrinuse           = (nn_hausnumero + 5)
-let eaddrnotavail        = (nn_hausnumero + 6)
-let econnrefused         = (nn_hausnumero + 7)
-let einprogress          = (nn_hausnumero + 8)
-let enotsock             = (nn_hausnumero + 9)
-let eafnosupport         = (nn_hausnumero + 10)
-let eproto               = (nn_hausnumero + 11)
-let eagain               = (nn_hausnumero + 12)
-let ebadf                = (nn_hausnumero + 13)
-let einval               = (nn_hausnumero + 14)
-let emfile               = (nn_hausnumero + 15)
-let efault               = (nn_hausnumero + 16)
-let eaccess              = (nn_hausnumero + 17)
-let enetreset            = (nn_hausnumero + 18)
-let enetunreach          = (nn_hausnumero + 19)
-let ehostunreach         = (nn_hausnumero + 20)
-let enotconn             = (nn_hausnumero + 21)
-let emsgsize             = (nn_hausnumero + 22)
-let etimedout            = (nn_hausnumero + 23)
-let econnaborted         = (nn_hausnumero + 24)
-let econnreset           = (nn_hausnumero + 25)
-let enoprotoopt          = (nn_hausnumero + 26)
-let eisconn              = (nn_hausnumero + 27)
-(* native error codes *)
-let eterm                = (nn_hausnumero + 53)
-let efsm                 = (nn_hausnumero + 54)
 
 let nn_msg = Unsigned.Size_t.of_int (-1)
 
@@ -79,46 +44,6 @@ let cmsg_level = field nn_cmsghdr "cmsg_level" int
 let cmsg_type  = field nn_cmsghdr "cmsg_type" int
 let () = seal nn_cmsghdr
 
-
-module Pair = struct
-  let nn_proto_pair = 1
-  let nn_pair       = nn_proto_pair * 16 + 0
-end
-
-module Pub_sub = struct
-  let nn_proto_pubsub    = 2
-  let nn_pub             = nn_proto_pubsub * 16 + 0
-  let nn_sub             = nn_proto_pubsub * 16 + 1
-  let nn_sub_subscribe   = 1
-  let nn_sub_unsubscribe = 2
-end
-
-module Req_rep = struct
-  let nn_proto_reqrep   = 3
-  let nn_req            = nn_proto_reqrep * 16 + 0
-  let nn_rep            = nn_proto_reqrep * 16 + 1
-  let nn_req_resend_ivl = 1
-end
-
-module Pipeline = struct
-  let nn_proto_pipeline = 5
-  let nn_push           = nn_proto_pipeline * 16 + 0
-  let nn_pull           = nn_proto_pipeline * 16 + 1
-end
-
-
-module Survey = struct
-  let nn_proto_survey      = 6
-  let nn_surveyor          = nn_proto_survey * 16 + 0
-  let nn_respondent        = nn_proto_survey * 16 + 1
-  let nn_surveyor_deadline = 1
-end
-
-module Bus = struct
-  let nn_proto_bus = 7
-  let nn_bus       = nn_proto_bus * 16 + 0
-end
-
 let from = Dl.(dlopen ~filename:"libnanomsg.so" ~flags:[RTLD_NOW])
 
 let nn_errno      = foreign ~from "nn_errno" (void @-> returning int)
@@ -142,7 +67,7 @@ let nn_sendmsg    = foreign ~from "nn_sendmsg" (int @-> ptr nn_msghdr @-> int @-
 let nn_recvmsg    = foreign ~from "nn_recvmsg" (int @-> ptr nn_msghdr @-> int @-> returning int)
 let nn_device     = foreign ~from "nn_device" (int @-> int @-> returning int)
 
-let nn_setsockopt = foreign ~from "nn_setsockopt" 
+let nn_setsockopt = foreign ~from "nn_setsockopt"
     (int @-> int @-> int @-> (ptr void) @-> size_t @-> returning int)
 
 let nn_recv_str = foreign ~from "nn_recv"

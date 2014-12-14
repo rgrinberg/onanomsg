@@ -1,16 +1,14 @@
 open Onanomsg
 
 let () =
-  let open Domain in
-  let open Socket in
   let address = `Inproc "t2" in
-  let sub = socket ~domain:Af_sp ~sock_type:sub in
-  let (_:endpoint) = connect sub address in
+  let sub = socket ~domain:AF_SP ~proto:Sub in
+  let (_:[< `Endpoint of int]) = connect sub address in
   subscribe sub ~topic:"";
   print_endline "Connecting subscriber";
   let packet = "foo bar baz" in
-  let pub = socket ~domain:Af_sp ~sock_type:pub in
-  let (_:endpoint) = bind pub address in
+  let pub = socket ~domain:AF_SP ~proto:Pub in
+  let (_:[< `Endpoint of int]) = bind pub address in
   send pub packet;
   print_endline "published message";
   let recv_msg = recv sub in

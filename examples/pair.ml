@@ -1,5 +1,4 @@
 open Onanomsg
-module D = Domain
 let printf = Printf.printf
 
 let send sock ~name =
@@ -31,14 +30,14 @@ let send_recv sock ~name =
 let node0 addr =
   printf "Connecting to address: %s\n" (string_of_addr addr);
   flush_all ();
-  let s = Socket.socket ~domain:D.Af_sp ~sock_type:Socket.pair in
+  let s = socket ~domain:AF_SP ~proto:Pair in
   ignore (bind s addr);
   send_recv s ~name:"node0";
   flush_all ();
   close s
 
 let node1 addr =
-  let s = Socket.socket ~domain:D.Af_sp ~sock_type:Socket.pair in
+  let s = socket ~domain:AF_SP ~proto:Pair in
   ignore (connect s addr);
   send_recv s ~name:"node1";
   close s
