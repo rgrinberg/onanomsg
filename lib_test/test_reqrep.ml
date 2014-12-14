@@ -1,15 +1,16 @@
+open Onanomsg
 
 let () =
-  let open Onanomsg.Domain in
-  let open Onanomsg.Socket in
+  let open Domain in
+  let open Socket in
   let receiver = socket ~domain:Af_sp ~sock_type:rep in
-  let _ = Onanomsg.bind receiver ~address:"inproc://*" in
+  let _ = bind receiver @@ `Inproc "*" in
   let sender = socket ~domain:Af_sp ~sock_type:req in
-  let _ = Onanomsg.connect sender ~address:"inproc://*" in
+  let _ = connect sender @@ `Inproc "*" in
   let packet = "testing" in
   Printf.printf "packet(%s) length: %d\n" packet (String.length packet);
-  Onanomsg.send sender packet;
-  let received = Onanomsg.recv receiver in
-  Onanomsg.close receiver;
-  Onanomsg.close sender;
+  send sender packet;
+  let received = recv receiver in
+  close receiver;
+  close sender;
   print_endline ("received: " ^ received);

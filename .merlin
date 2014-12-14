@@ -1,6 +1,7 @@
 PRJ nanomsg
 PKG ctypes
 PKG ctypes.foreign
+PKG ipaddr
 
 S lib
 S lib_test

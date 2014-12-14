@@ -1,20 +1,19 @@
-
-
-let () = 
+let () =
   let open Onanomsg.Domain in
   let open Onanomsg.Socket in
-  let (addr1, addr2) = ("inproc://tt1", "inproc://tt2") in
+  let addr1 = `Inproc "tt1" in
+  let addr2 = `Inproc "tt2" in
   let (sub1, sub2) = (socket ~domain:Af_sp ~sock_type:sub
                  , socket ~domain:Af_sp ~sock_type:sub) in
-  let (_, _) = (Onanomsg.connect sub1 ~address:addr1
-               , Onanomsg.connect sub2 ~address:addr2) in
+  let (_, _) = (Onanomsg.connect sub1 addr1
+               , Onanomsg.connect sub2 addr2) in
   Onanomsg.subscribe sub1 ~topic:"";
   Onanomsg.subscribe sub2 ~topic:"";
   print_endline "connected subscribers";
   let packet = "one two three" in
   let pub = socket ~domain:Af_sp ~sock_type:pub in
-  ignore (Onanomsg.bind pub ~address:addr1);
-  ignore (Onanomsg.bind pub ~address:addr2);
+  ignore (Onanomsg.bind pub addr1);
+  ignore (Onanomsg.bind pub addr2);
   ignore (Onanomsg.send pub packet);
   print_endline "published message";
   let (x1, x2) = Onanomsg.(recv sub1, recv sub2) in

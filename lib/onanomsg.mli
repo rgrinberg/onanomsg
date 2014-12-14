@@ -80,13 +80,17 @@ module Socket : sig
   val socket : domain:Domain.t -> sock_type:('a kind) -> 'a t
 end
 
+type addr = [`Inproc of string | `Ipc of string | `Tcp of Ipaddr.t * int]
+val string_of_addr : addr -> string
+val addr_of_string : string -> addr
+
 val socket : domain:Domain.t -> sock_type:('a Socket.kind) -> 'a Socket.t
 
 val close : 'a Socket.t -> unit
 
-val bind : 'a Socket.t -> address:string -> endpoint
+val bind : 'a Socket.t -> addr -> endpoint
 
-val connect : 'a Socket.t -> address:string -> endpoint
+val connect : 'a Socket.t -> addr -> endpoint
 
 val shutdown : 'a Socket.t -> endpoint -> unit
 

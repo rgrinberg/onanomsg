@@ -167,13 +167,43 @@ let close (Socket socket) =
   let ret = nn_close socket in
   raise_not_zero ret
 
-let bind (Socket socket) ~address =
-  let endpoint = nn_bind socket address in
+module Ipaddr = struct
+  include Ipaddr
+  let pp = pp_hum
+end
+
+type addr = [`Inproc of string | `Ipc of string | `Tcp of Ipaddr.t * int]
+
+let string_of_addr = function
+  | `Inproc a -> "inproc://" ^ a
+  | `Ipc a -> "ipc://" ^ a
+  | `Tcp (a, p) -> "tcp://" ^ Ipaddr.to_string a ^ ":" ^ string_of_int p
+
+let addr_of_string s =
+  let len = String.length s in
+  let addr_start = String.index s '/' + 2 in
+  let addr_len = len - addr_start in
+  match String.sub s 0 (addr_start - 3) with
+  | "inproc" -> `Inproc (String.sub s addr_start addr_len)
+  | "ipc" -> `Ipc (String.sub s addr_start addr_len)
+  | "tcp" ->
+    let port_start = String.rindex s ':' + 1 in
+    let port = String.sub s port_start (len - port_start) in
+    let port, port_len = int_of_string port, String.length port in
+    let addr = Ipaddr.of_string_exn @@
+      String.sub s addr_start (addr_len - port_len - 1) in
+    `Tcp (addr, port)
+  | _ -> invalid_arg "addr_of_string"
+
+let bind (Socket socket) addr =
+  let addr = string_of_addr addr in
+  let endpoint = nn_bind socket addr in
   raise_negative endpoint;
   Endpoint endpoint
 
-let connect (Socket socket) ~address =
-  let endpoint = nn_connect socket address in
+let connect (Socket socket) addr =
+  let addr = string_of_addr addr in
+  let endpoint = nn_connect socket addr in
   raise_negative endpoint;
   Endpoint endpoint
 
