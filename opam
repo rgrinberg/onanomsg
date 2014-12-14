@@ -1,0 +1,11 @@
+opam-version: "1.2"
+name: "onanomsg"
+maintainer: "rudi.grinberg@gmail.com"
+build: [
+  [make]
+]
+depends: [
+  "ocamlfind" {build}
+  "conf-nanomsg"
+  "ctypes" {>= "0.2"}
+]

@@ -7,3 +7,4 @@ _build/**
 *.native
 _obuild/**
 ocp-build.root
+*.install
