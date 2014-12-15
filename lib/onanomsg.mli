@@ -1,3 +1,18 @@
+module Symbol : sig
+  type t = private {
+    sp_value: int;
+    sp_name: string;
+    sp_ns: int;
+    sp_type: int;
+    sp_unit: int;
+  }
+
+  val value_of_name : string -> int option
+  val of_name : string -> t option
+  val value_of_name_exn : string -> int
+  val of_name_exn : string -> t
+end
+
 type error =
   | E_NOT_SUP
   | E_PROTO_NO_SUPPORT
@@ -26,11 +41,12 @@ type error =
   | E_CONN_RESET
   | E_NO_PROTO_OPT
   | E_IS_CONN
+  | E_SOCKT_NO_SUPPORT
   | E_TERM
   | E_FSM
   | E_UNKNOWN
 
-exception Error of error * string
+exception Error of error * string * string
 
 type domain = AF_SP | AF_SP_RAW
 type proto = Pair | Pub | Sub | Req | Rep | Push | Pull | Surveyor | Respondant | Bus
@@ -46,8 +62,14 @@ val socket : domain:domain -> proto:proto -> socket
 val bind : socket -> addr -> eid
 val connect : socket -> addr -> eid
 
-val send : ?block:bool -> socket -> string -> unit
-val recv : ?block:bool -> socket -> string
+module B : sig
+  val send : socket -> Lwt_bytes.t -> int -> int -> unit
+  val send_from_bytes : socket -> Bytes.t -> int -> int -> unit
+  val send_from_string : socket -> string -> unit
+
+  val recv : socket -> (Lwt_bytes.t -> int -> 'a) -> 'a
+  val recv_to_string : socket -> (string -> 'a) -> 'a
+end
 
 val shutdown : socket -> eid -> unit
 val close : socket -> unit
@@ -56,6 +78,11 @@ val close : socket -> unit
 
 val subscribe : socket -> string -> unit
 val unsubscribe : socket -> string -> unit
+
+(** {1 Get socket options} *)
+
+val send_fd : socket -> Unix.file_descr
+val recv_fd : socket -> Unix.file_descr
 
 (** {1 Set socket options} *)
 

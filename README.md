@@ -6,33 +6,18 @@ Ctypes based bindings to nanomsg for OCaml (alpha)
 
 The dependencies are:
 * ctypes > 0.2
-* ocp-build
-* nanomsg - [nanomsg](https://github.com/250bpm/nanomsg)
+* lwt > 2.4.6
+* ppx_deriving
+* ipaddr
+* [nanomsg](https://github.com/250bpm/nanomsg)
 
 ```
-make # no errors hopefully
-make install
+opam pin add .
 ```
 
-## Example
+## Examples
 
-```
-let () = 
-  let open Onanomsg.Domain in
-  let open Onanomsg.Socket in
-  let address = "inproc://t2t" in
-  let sub = socket ~domain:Af_sp ~sock_type:sub in
-  let endpoint = Onanomsg.connect sub ~address in
-  Onanomsg.subscribe sub ~topic:"";
-  let packet = "foo bar baz" in
-  let pub = socket ~domain:Af_sp ~sock_type:pub in
-  let endpoint = Onanomsg.bind pub ~address in
-  Onanomsg.send pub packet;
-  let recv_msg = Onanomsg.recv sub in
-  Printf.printf "Received: %s\n" recv_msg;
-  Onanomsg.close pub;
-  Onanomsg.close sub
-```
+See the `examples` directory.
 
 ## Overview
 

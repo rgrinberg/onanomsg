@@ -1,24 +1,22 @@
 open Onanomsg
-let printf = Printf.printf
 
 let node0 addr =
-  printf "node0: %s\n" @@ string_of_addr addr;
-  flush_all ();
+  Printf.printf "node0: %s\n%!" @@ string_of_addr addr;
   let s = socket ~domain:AF_SP ~proto:Rep in
   ignore (bind s addr);
   print_endline "starting to listen";
-  printf "NODE0: RECEIVED '%s'\n" (Onanomsg.recv s);
+  B.recv_to_string s (fun str -> Printf.printf "NODE0: RECEIVED '%s'\n%!" str);
   print_endline ";(";
-  Onanomsg.send s "testing";
+  B.send_from_string s "testing";
   flush_all ()
 
 let node1 addr msg =
-  printf "node1: %s\n" @@ string_of_addr addr;
+  Printf.printf "node1: %s\n" @@ string_of_addr addr;
   let s = socket ~domain:AF_SP ~proto:Req in
   let endpoint = connect s addr in
-  printf "NODE1: SENDING '%s'\n" msg;
-  Onanomsg.send s msg;
-  Onanomsg.shutdown s endpoint
+  Printf.printf "NODE1: SENDING '%s'\n" msg;
+  B.send_from_string s msg;
+  shutdown s endpoint
 
 let () =
   let argc = Array.length Sys.argv in
@@ -27,4 +25,4 @@ let () =
   else if argc > 2 && Sys.argv.(1) = "node1" then
     node1 (addr_of_string Sys.argv.(2)) Sys.argv.(3)
   else
-    printf "Usage: %s node0|node1 <URL> <ARG> ...'\n" Sys.argv.(0)
+    Printf.printf "Usage: %s node0|node1 <URL> <ARG> ...'\n" Sys.argv.(0)

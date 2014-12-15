@@ -14,10 +14,10 @@ let () =
   let pub = socket ~domain:AF_SP ~proto:Pub in
   ignore (bind pub addr1);
   ignore (bind pub addr2);
-  ignore (send pub packet);
+  ignore (B.send_from_string pub packet);
   print_endline "published message";
-  let x1 = recv sub1 in
-  let x2 = recv sub2 in
+  let x1 = B.recv_to_string sub1 (fun str -> str) in
+  let x2 = B.recv_to_string sub2 (fun str -> str) in
   print_endline "receiving in subscribers";
   Printf.printf "Received: %s -- Received %s\n" x1 x2;
   print_endline "closed publisher";

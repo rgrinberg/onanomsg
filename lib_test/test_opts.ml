@@ -14,9 +14,9 @@ let () =
   let packet = "foo bar baz" in
   let pub = socket ~domain:AF_SP ~proto:Pub in
   let _ = bind pub address in
-  send pub packet;
+  B.send_from_string pub packet;
   print_endline "published message";
-  let recv_msg = recv sub in
+  let recv_msg = B.recv_to_string sub (fun str -> str) in
   print_endline "receiving in subscribers";
   Printf.printf "Received: %s\n" recv_msg;
   print_endline "closing publisher";

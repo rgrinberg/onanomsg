@@ -7,8 +7,8 @@ let () =
   let _ = connect sender @@ `Inproc "*" in
   let packet = "testing" in
   Printf.printf "packet(%s) length: %d\n" packet (String.length packet);
-  send sender packet;
-  let received = recv receiver in
+  B.send_from_string sender packet;
+  let received = B.recv_to_string receiver (fun str -> str) in
   close receiver;
   close sender;
   print_endline ("received: " ^ received);

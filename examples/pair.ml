@@ -4,18 +4,18 @@ let printf = Printf.printf
 let send sock ~name =
   printf "%s: SENDING \"%s\"\n" name name;
   flush_all ();
-  try send sock name;
+  try B.send_from_string sock name;
   (* not sure why E_UNKNOWN is being thrown here *)
-  with Error(E_UNKNOWN, _) -> ();
+  with Error(E_UNKNOWN, _, _) -> ();
   flush_all ()
 
 let recv sock ~name =
   try
-    let buf = recv sock in
-    printf "%s: RECEIVED \"%s\"\n" name buf;
-    flush_all ()
+    B.recv_to_string sock (fun s ->
+        printf "%s: RECEIVED \"%s\"\n" name s;
+        flush_all ())
   (* not sure why E_UNKNOWN is being thrown here *)
-  with Error(E_UNKNOWN, _) -> ()
+  with Error(E_UNKNOWN, _, _) -> ()
 
 let send_recv sock ~name =
   set_recv_timeout sock (`Milliseconds 100);

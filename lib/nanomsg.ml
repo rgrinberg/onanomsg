@@ -2,7 +2,6 @@ open Ctypes
 open Foreign
 
 let nn_sockaddr_max      = 128
-let nn_sol_socket        = 0
 
 (* socket options *)
 let nn_linger            = 1
@@ -44,31 +43,59 @@ let cmsg_level = field nn_cmsghdr "cmsg_level" int
 let cmsg_type  = field nn_cmsghdr "cmsg_type" int
 let () = seal nn_cmsghdr
 
+type nn_symbol_properties
+let nn_symbol_properties : nn_symbol_properties structure typ =
+  structure "nn_symbol_properties"
+let nnsym_value = field nn_symbol_properties "value" int
+let nnsym_name = field nn_symbol_properties "name" string
+let nnsym_ns = field nn_symbol_properties "ns" int
+let nnsym_type = field nn_symbol_properties "type" int
+let nnsym_unit = field nn_symbol_properties "unit" int
+let () = seal nn_symbol_properties
+
 let from = Dl.(dlopen ~filename:"libnanomsg.so" ~flags:[RTLD_NOW])
 
 let nn_errno      = foreign ~from "nn_errno" (void @-> returning int)
 let nn_strerror   = foreign ~from "nn_strerror" (int @-> returning string)
-let nn_symbol     = foreign ~from "nn_symbol" (int @-> ptr int @-> returning string)
 let nn_term       = foreign ~from "nn_term" (void @-> returning void)
-let nn_allocmsg   = foreign ~from "nn_allocmsg" (size_t @-> int @-> returning (ptr void))
-let nn_freemsg    = foreign ~from "nn_freemsg" (ptr void @-> returning int)
 let nn_socket     = foreign ~from "nn_socket" (int @-> int @-> returning int)
 let nn_close      = foreign ~from "nn_close" (int @-> returning int)
-let nn_getsockopt = foreign ~from "nn_getsockopt" (int @-> int @-> int @-> (ptr void) @-> (ptr size_t) @-> returning int)
 let nn_bind       = foreign ~from "nn_bind" (int @-> string @-> returning int)
 let nn_connect    = foreign ~from "nn_connect" (int @-> string @-> returning int)
 let nn_shutdown   = foreign ~from "nn_shutdown" (int @-> int @-> returning int)
-let nn_send       = foreign ~from "nn_send" (int @-> string @-> size_t @-> int @-> returning int)
 
-let nn_recv       = foreign ~from "nn_recv"
-    (int @-> ptr (string_opt) @-> size_t @-> int @-> returning int)
+(** Message allocation *)
 
-let nn_sendmsg    = foreign ~from "nn_sendmsg" (int @-> ptr nn_msghdr @-> int @-> returning int)
-let nn_recvmsg    = foreign ~from "nn_recvmsg" (int @-> ptr nn_msghdr @-> int @-> returning int)
-let nn_device     = foreign ~from "nn_device" (int @-> int @-> returning int)
+let nn_allocmsg = foreign ~from "nn_allocmsg"
+    (size_t @-> int @-> returning (ptr_opt void))
+let nn_reallocmsg = foreign ~from "nn_reallocmsg"
+    (ptr void @-> size_t @-> returning (ptr_opt void))
+let nn_freemsg = foreign ~from "nn_freemsg"
+    (ptr void @-> returning int)
 
+(** Send / Recv *)
+
+let nn_send = foreign ~from "nn_send"
+    (int @-> ptr (ptr void) @-> size_t @-> int @-> returning int)
+let nn_recv = foreign ~from "nn_recv"
+    (int @-> ptr (ptr void) @-> size_t @-> int @-> returning int)
+let nn_sendmsg = foreign ~from "nn_sendmsg"
+    (int @-> ptr nn_msghdr @-> int @-> returning int)
+let nn_recvmsg = foreign ~from "nn_recvmsg"
+    (int @-> ptr nn_msghdr @-> int @-> returning int)
+
+(** Setsockopt / Getsockopt *)
+
+let nn_getsockopt = foreign ~from "nn_getsockopt"
+    (int @-> int @-> int @-> (ptr void) @-> (ptr size_t) @-> returning int)
 let nn_setsockopt = foreign ~from "nn_setsockopt"
     (int @-> int @-> int @-> (ptr void) @-> size_t @-> returning int)
 
-let nn_recv_str = foreign ~from "nn_recv"
-    (int @-> string @-> size_t @-> int @-> returning int)
+let nn_device = foreign ~from "nn_device" (int @-> int @-> returning int)
+
+(** Runtime access to nanomsg's symbols *)
+
+let nn_symbol = foreign ~from "nn_symbol"
+    (int @-> ptr int @-> returning string)
+let nn_symbol_info = foreign ~from "nn_symbol_info"
+    (int @-> ptr nn_symbol_properties @-> int @-> returning int)
