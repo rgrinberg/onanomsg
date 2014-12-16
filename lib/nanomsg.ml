@@ -1,25 +1,6 @@
 open Ctypes
 open Foreign
 
-let nn_sockaddr_max      = 128
-
-(* socket options *)
-let nn_linger            = 1
-let nn_sndbuf            = 2
-let nn_rcvbuf            = 3
-let nn_sndtimeo          = 4
-let nn_rcvtimeo          = 5
-let nn_reconnect_ivl     = 6
-let nn_reconnect_ivl_max = 7
-let nn_sndprio           = 8
-let nn_sndfd             = 10
-let nn_rcvfd             = 11
-let nn_domain            = 12
-let nn_protocol          = 13
-let nn_ipv4only          = 14
-(* send/recv options *)
-let nn_dontwait          = 1
-
 let nn_msg = Unsigned.Size_t.of_int (-1)
 
 type nn_iovec
@@ -58,6 +39,8 @@ let from = Dl.(dlopen ~filename:"libnanomsg.so" ~flags:[RTLD_NOW])
 let nn_errno      = foreign ~from "nn_errno" (void @-> returning int)
 let nn_strerror   = foreign ~from "nn_strerror" (int @-> returning string)
 let nn_term       = foreign ~from "nn_term" (void @-> returning void)
+let nn_device = foreign ~from "nn_device" (int @-> int @-> returning int)
+
 let nn_socket     = foreign ~from "nn_socket" (int @-> int @-> returning int)
 let nn_close      = foreign ~from "nn_close" (int @-> returning int)
 let nn_bind       = foreign ~from "nn_bind" (int @-> string @-> returning int)
@@ -90,8 +73,6 @@ let nn_getsockopt = foreign ~from "nn_getsockopt"
     (int @-> int @-> int @-> (ptr void) @-> (ptr size_t) @-> returning int)
 let nn_setsockopt = foreign ~from "nn_setsockopt"
     (int @-> int @-> int @-> (ptr void) @-> size_t @-> returning int)
-
-let nn_device = foreign ~from "nn_device" (int @-> int @-> returning int)
 
 (** Runtime access to nanomsg's symbols *)
 

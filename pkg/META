@@ -1,4 +1,4 @@
-version = "0.1"
+version = "0.2"
 description = "Bindings to the nanomsg library"
 requires = "ctypes.foreign ipaddr ppx_deriving.std lwt.unix"
 archive(byte) = "onanomsg.cma"
@@ -6,14 +6,3 @@ archive(byte, plugin) = "onanomsg.cma"
 archive(native) = "onanomsg.cmxa"
 archive(native, plugin) = "onanomsg.cmxs"
 exists_if = "onanomsg.cma"
-
-package "lwt" (
- version = "0.1"
- description = "Bindings to the nanomsg library, for Lwt"
- requires = "onanomsg lwt.unix"
- archive(byte) = "lwt_nanomsg.cma"
- archive(byte, plugin) = "lwt_nanomsg.cma"
- archive(native) = "lwt_nanomsg.cmxa"
- archive(native, plugin) = "lwt_nanomsg.cmxs"
- exists_if = "lwt_nanomsg.cma"
-)

@@ -4,8 +4,14 @@ BUILDOPTS=native=true native-dynlink=true
 
 all: build
 
+test: suite.native
+	./suite.native -shards 1 -runner sequential
+
+suite.native: build
+
 build:
 	ocaml pkg/build.ml $(BUILDOPTS)
+	./suite.native -shards 1 -runner sequential
 
 install: build
 	opam-installer --prefix=$(PREFIX) $(PKG).install

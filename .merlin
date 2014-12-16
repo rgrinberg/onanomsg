@@ -4,6 +4,7 @@ PKG ctypes.foreign
 PKG ipaddr
 PKG lwt.unix
 PKG lwt.ppx
+PKG oUnit
 
 S lib
 S lib_test

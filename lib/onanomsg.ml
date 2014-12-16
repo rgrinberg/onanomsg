@@ -1,4 +1,16 @@
 open Nanomsg
+open Lwt.Infix
+
+module Opt = struct
+  let run = function
+    | Some v -> v
+    | None -> invalid_arg "Opt.run"
+end
+
+module Ipaddr = struct
+  include Ipaddr
+  let pp = pp_hum
+end
 
 module Symbol = struct
   type t = {
@@ -34,45 +46,38 @@ module Symbol = struct
   let value_of_name name = try Some (value_of_name_exn name) with _ -> None
   let of_name_exn = Hashtbl.find table
   let of_name name = try Some (of_name_exn name) with _ -> None
+  let errvalue_of_errno_exn errno =
+    try
+      Hashtbl.iter (fun k v ->
+          if v.sp_value = errno then failwith v.sp_name)
+        table; raise Not_found
+    with Failure name -> name
+  let errvalue_of_errno errno =
+    try Some (errvalue_of_errno_exn errno) with Not_found -> None
 end
 
-type error =
-  | E_NOT_SUP [@value 156384713]
-  | E_PROTO_NO_SUPPORT
-  | E_NO_BUFFS
-  | E_NET_DOWN
-  | E_ADDR_IN_USE
-  | E_ADDR_NOT_AVAIL
-  | E_CONN_REFUSED
-  | E_IN_PROGRESS
-  | E_NOT_SOCK
-  | E_AF_NO_SUPPORT
-  | E_PROTO
-  | E_AGAIN
-  | E_BAD_F
-  | E_INVAL
-  | E_MFILE
-  | E_FAULT
-  | E_ACCCESS
-  | E_NET_RESET
-  | E_NET_UNREACH
-  | E_HOST_UNREACH
-  | E_NOT_CONN
-  | E_MSG_SIZE
-  | E_TIMED_OUT
-  | E_CONN_ABORTED
-  | E_CONN_RESET
-  | E_NO_PROTO_OPT
-  | E_IS_CONN
-  | E_SOCKT_NO_SUPPORT
-  | E_TERM [@value 156384765]
-  | E_FSM
-  | E_UNKNOWN (* NOT nanomsg error *) [@@deriving enum,show]
+exception Error of string * string
 
-exception Error of error * string * string
+let throw () =
+  let code = nn_errno () in
+  let err_string = nn_strerror code in
+  let err_value =
+    if code > 156384712
+    then Symbol.errvalue_of_errno_exn code
+    else "" in
+  raise (Error (err_value, err_string))
 
+let throw_lwt () = Lwt.wrap1 throw ()
+
+let raise_if cond f =
+  let res = f () in
+  if cond res then throw () else res
+
+let raise_negative = raise_if (fun x -> x < 0)
+let raise_notequal v = raise_if (fun x -> x <> v)
+
+type socket = int
 type domain = AF_SP [@value 1] | AF_SP_RAW [@@deriving enum]
-
 type proto =
   | Pair [@value 16]
   | Pub [@value 32]
@@ -85,30 +90,6 @@ type proto =
   | Respondant [@value 97]
   | Bus [@value 112]
       [@@deriving enum]
-
-type socket = int
-
-let current_error () =
-  let current_error_code = nn_errno () in
-  (current_error_code, nn_strerror current_error_code)
-
-let throw_current_error () =
-  let (code, err_string) = current_error () in
-  let e = match error_of_enum code with Some e -> e | None -> E_UNKNOWN in
-  raise (Error (e, show_error e, err_string))
-
-let raise_if cond f =
-  let res = f () in
-  if cond res then throw_current_error () else res
-
-let raise_negative = raise_if (fun x -> x < 0)
-let raise_not_zero = raise_if (fun x -> x <> 0)
-
-
-module Ipaddr = struct
-  include Ipaddr
-  let pp = pp_hum
-end
 
 type addr = [`Inproc of string | `Ipc of string | `Tcp of Ipaddr.t * int]
 
@@ -133,64 +114,118 @@ let addr_of_string s =
     `Tcp (addr, port)
   | _ -> invalid_arg "addr_of_string"
 
-let socket ~domain ~proto = nn_socket (domain_to_enum domain) (proto_to_enum proto)
 
 type eid = int
 
-let bind socket addr =
-  raise_negative (fun () -> nn_bind socket @@ string_of_addr addr)
+let socket ~domain ~proto =
+  raise_negative (fun () ->
+      nn_socket (domain_to_enum domain) (proto_to_enum proto))
 
-let connect socket addr =
-  raise_negative (fun () -> nn_connect socket @@ string_of_addr addr)
+let bind sock addr =
+  raise_negative (fun () -> nn_bind sock @@ string_of_addr addr)
+
+let connect sock addr =
+  raise_negative (fun () -> nn_connect sock @@ string_of_addr addr)
 
 let shutdown s e =
   ignore @@ raise_negative (fun () -> nn_shutdown s e)
 
-let close socket =
-  ignore @@ raise_not_zero (fun () -> nn_close socket)
+let close sock =
+  ignore @@ raise_notequal 0 (fun () -> nn_close sock)
 
 let size_of_int = Unsigned.Size_t.of_int
 
+(* getsockopt *)
+
+let getsockopt ~typ ~init sock level opt =
+  let open Ctypes in
+  let p = allocate typ init in
+  let size = allocate size_t @@ size_of_int (sizeof typ) in
+  ignore @@ raise_negative (fun () ->
+      nn_getsockopt sock
+        Symbol.(value_of_name_exn level)
+        Symbol.(value_of_name_exn opt)
+        (to_voidp p) size
+    ); !@ p
+
+let getsockopt_int = getsockopt ~typ:Ctypes.int ~init:0
+
+let domain sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_DOMAIN" |>
+  domain_of_enum |> Opt.run
+
+let proto sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_PROTOCOL" |>
+  proto_of_enum |> Opt.run
+
+let get_linger sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_LINGER" |> function
+  | n when n < 0 -> `Inf
+  | n -> `Ms n
+
+let get_send_bufsize sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_SNDBUF"
+
+let get_recv_bufsize sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_RCVBUF"
+
+let get_send_timeout sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_SNDTIMEO" |> function
+  | n when n < 0 -> `Inf
+  | n -> `Ms n
+
+let get_recv_timeout sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_RCVTIMEO" |> function
+  | n when n < 0 -> `Inf
+  | n -> `Ms n
+
+let send_fd sock =
+  let fd = getsockopt_int sock "NN_SOL_SOCKET" "NN_SNDFD" in
+  (Obj.magic fd : Unix.file_descr)
+
+let recv_fd sock =
+  let fd = getsockopt_int sock "NN_SOL_SOCKET" "NN_RCVFD" in
+  (Obj.magic fd : Unix.file_descr)
+
 module B = struct
-  let send socket buf pos len =
+  let send sock buf pos len =
     if pos < 0 || len < 0 || pos + len > Lwt_bytes.length buf
     then invalid_arg "bounds";
     let nn_buf = nn_allocmsg (size_of_int len) 0 in
     match nn_buf with
-    | None -> throw_current_error ()
+    | None -> throw ()
     | Some nn_buf ->
       let nn_buf_p = Ctypes.(allocate (ptr void) nn_buf) in
       let ba = Ctypes.(bigarray_of_ptr array1 len
                          Bigarray.char @@ from_voidp char nn_buf) in
       Lwt_bytes.blit buf pos ba 0 len;
-      let nb_sent = raise_negative
-          (fun () -> nn_send socket nn_buf_p nn_msg 0) in
-      assert (nb_sent = len)
+      ignore @@ raise_notequal len
+        (fun () -> nn_send sock nn_buf_p nn_msg 0)
 
-  let send_from_bytes socket buf pos len =
+  let send_from_bytes sock buf pos len =
     if pos < 0 || len < 0 || pos + len > Bytes.length buf
     then invalid_arg "bounds";
     let nn_buf = nn_allocmsg (size_of_int len) 0 in
     match nn_buf with
-    | None -> throw_current_error ()
+    | None -> throw ()
     | Some nn_buf ->
       let nn_buf_p = Ctypes.(allocate (ptr void) nn_buf) in
       let ba = Ctypes.(bigarray_of_ptr array1 len
                          Bigarray.char @@ from_voidp char nn_buf) in
       Lwt_bytes.blit_from_bytes buf pos ba 0 len;
-      let nb_sent = raise_negative
-          (fun () -> nn_send socket nn_buf_p nn_msg 0) in
-      assert (nb_sent = len)
+      ignore @@ raise_notequal len
+          (fun () -> nn_send sock nn_buf_p nn_msg 0)
 
-  let send_from_string socket s =
-    send_from_bytes socket (Bytes.unsafe_of_string s) 0 (String.length s)
+  let send_from_string sock s =
+    send_from_bytes sock (Bytes.unsafe_of_string s) 0 (String.length s)
 
-  let recv socket f =
+  let recv sock f =
     let open Ctypes in
     let ba_start_p = allocate (ptr void) null in
-    let nb_recv = nn_recv socket ba_start_p nn_msg 0 in
+    let nb_recv =
+      raise_negative (fun () -> nn_recv sock ba_start_p nn_msg 0) in
     let ba_start = !@ ba_start_p in
-    if nb_recv < 0 then throw_current_error ()
+    if nb_recv < 0 then throw ()
     else
       let ba = bigarray_of_ptr array1 nb_recv
           Bigarray.char (from_voidp char ba_start) in
@@ -198,102 +233,137 @@ module B = struct
       let (_:int) = nn_freemsg ba_start in
       res
 
-  let recv_to_string socket f =
-    recv socket (fun ba len ->
+  let recv_to_string sock f =
+    recv sock (fun ba len ->
         let buf = Bytes.create len in
         Lwt_bytes.blit_to_bytes ba 0 buf 0 len;
         f @@ Bytes.unsafe_to_string buf
       )
 end
 
-let subscribe socket topic =
+module NB = struct
+  let raise_if sock io_event cond f =
+    let open Lwt_unix in
+    let fd = match io_event with
+      | Write -> send_fd sock
+      | Read -> recv_fd sock in
+    wrap_syscall io_event (of_unix_file_descr fd) f >>= fun res ->
+    if cond res then throw_lwt () else Lwt.return res
+
+  let raise_negative sock io_event f = raise_if sock io_event (fun x -> x < 0) f
+  let raise_notequal sock io_event v f = raise_if sock io_event (fun x -> x <> v) f
+
+  let send sock buf pos len =
+    if pos < 0 || len < 0 || pos + len > Lwt_bytes.length buf
+    then invalid_arg "bounds";
+    let nn_buf = nn_allocmsg (size_of_int len) 0 in
+    match nn_buf with
+    | None -> throw ()
+    | Some nn_buf ->
+      let nn_buf_p = Ctypes.(allocate (ptr void) nn_buf) in
+      let ba = Ctypes.(bigarray_of_ptr array1 len
+                         Bigarray.char @@ from_voidp char nn_buf) in
+      Lwt_bytes.blit buf pos ba 0 len;
+      raise_notequal sock Lwt_unix.Write len
+        (fun () -> nn_send sock nn_buf_p nn_msg
+            Symbol.(value_of_name_exn "NN_DONTWAIT")) >|= fun nb_written ->
+      ignore nb_written
+
+  let send_from_bytes sock buf pos len =
+    if pos < 0 || len < 0 || pos + len > Bytes.length buf
+    then invalid_arg "bounds";
+    let nn_buf = nn_allocmsg (size_of_int len) 0 in
+    match nn_buf with
+    | None -> throw ()
+    | Some nn_buf ->
+      let nn_buf_p = Ctypes.(allocate (ptr void) nn_buf) in
+      let ba = Ctypes.(bigarray_of_ptr array1 len
+                         Bigarray.char @@ from_voidp char nn_buf) in
+      Lwt_bytes.blit_from_bytes buf pos ba 0 len;
+      raise_notequal sock Lwt_unix.Write len
+        (fun () -> nn_send sock nn_buf_p nn_msg
+            Symbol.(value_of_name_exn "NN_DONTWAIT")) >|= fun nb_written ->
+      ignore nb_written
+
+  let send_from_string sock s =
+    send_from_bytes sock (Bytes.unsafe_of_string s) 0 (String.length s)
+
+  let recv sock f =
+    let open Lwt_unix in
+    let open Ctypes in
+    let ba_start_p = allocate (ptr void) null in
+    raise_negative sock Lwt_unix.Read
+      (fun () -> nn_recv sock ba_start_p nn_msg
+          Symbol.(value_of_name_exn "NN_DONTWAIT")) >>= fun nb_recv ->
+    let ba_start = !@ ba_start_p in
+    let ba = bigarray_of_ptr array1 nb_recv
+        Bigarray.char (from_voidp char ba_start) in
+    f ba nb_recv >|= fun res ->
+    let (_:int) = nn_freemsg ba_start in
+    res
+
+  let recv_to_string sock f =
+    recv sock (fun ba len ->
+        let buf = Bytes.create len in
+        Lwt_bytes.blit_to_bytes ba 0 buf 0 len;
+        f @@ Bytes.unsafe_to_string buf
+      )
+end
+
+let setsockopt sock level opt optval optvalsize =
   let open Ctypes in
   ignore @@ raise_negative (fun () ->
-      nn_setsockopt socket
-        Symbol.(value_of_name_exn "NN_SUB")
-        Symbol.(value_of_name_exn "NN_SUB_SUBSCRIBE")
-        (to_voidp (allocate string topic))
-        (size_of_int (String.length topic))
+      nn_setsockopt sock
+        (Symbol.value_of_name_exn level)
+        (Symbol.value_of_name_exn opt)
+        (to_voidp optval)
+        (size_of_int optvalsize)
     )
 
-let unsubscribe socket topic =
+let setsockopt_int sock level opt v =
   let open Ctypes in
-  ignore @@ raise_negative (fun () ->
-      nn_setsockopt socket
-        Symbol.(value_of_name_exn "NN_SUB")
-        Symbol.(value_of_name_exn "NN_SUB_UNSUBSCRIBE")
-        (to_voidp (allocate string topic))
-        (size_of_int (String.length topic))
-    )
+  setsockopt sock level opt (allocate int v) (sizeof int)
 
-(* helper function to set options *)
-let set_option s typ ~option ~value =
-  let open Ctypes in
-  ignore @@ raise_negative (fun () ->
-      nn_setsockopt s
-        (Symbol.value_of_name_exn "NN_SOL_SOCKET")
-        option
-        (to_voidp (allocate typ value))
-        (size_of_int (sizeof typ))
-    )
 
-let inf_to_val = function
-  | `Infinite -> -1
-  | `Milliseconds x -> x
+let subscribe sock topic =
+  setsockopt sock "NN_SUB" "NN_SUB_SUBSCRIBE"
+    Ctypes.(allocate string topic) (String.length topic)
 
-let set_linger socket v =
-  set_option socket Ctypes.int ~option:nn_linger ~value:(inf_to_val v)
+let unsubscribe sock topic =
+  setsockopt sock "NN_SUB" "NN_SUB_UNSUBSCRIBE"
+    Ctypes.(allocate string topic) (String.length topic)
 
-let set_send_buffer socket size =
-  set_option socket Ctypes.int ~option:nn_sndbuf ~value:size
+let int_of_duration = function
+  | `Inf -> -1
+  | `Ms x -> x
 
-let set_recv_buffer socket size =
-  set_option socket Ctypes.int ~option:nn_rcvbuf ~value:size
+let int_of_bool = function
+  | false -> 0
+  | true -> 1
 
-let set_send_timeout socket v =
-  set_option socket Ctypes.int ~option:nn_sndtimeo ~value:(inf_to_val v)
+let set_linger sock duration =
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_LINGER" (int_of_duration duration)
 
-let set_recv_timeout socket v =
-  set_option socket Ctypes.int ~option:nn_rcvtimeo ~value:(inf_to_val v)
+let set_send_bufsize sock size =
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_SNDBUF" size
 
-let set_reconnect_interval socket milliseconds =
-  set_option socket Ctypes.int ~option:nn_reconnect_ivl ~value:milliseconds
+let set_recv_bufsize sock size =
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_RCVBUF" size
 
-let set_send_priority socket priority =
-  if priority >= 1 || priority <= 16 then
-    set_option socket Ctypes.int ~option:nn_sndprio ~value:priority
-  else
-    invalid_arg (
-      Printf.sprintf "set_send_priority: priority(%d) must be between [1,16]"
-      priority
-    )
+let set_send_timeout sock duration =
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_SNDTIMEO" (int_of_duration duration)
 
-let set_ipv4_only socket v =
-  let value = if v then 1 else 0 in
-  set_option socket Ctypes.int ~option:nn_ipv4only ~value
+let set_recv_timeout sock duration =
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_RCVTIMEO" (int_of_duration duration)
 
-let send_fd socket =
-  let open Ctypes in
-  let fd_p = allocate int 0 in
-  let size = allocate size_t @@ size_of_int (sizeof int) in
-  ignore @@ raise_negative (fun () ->
-      nn_getsockopt socket
-        Symbol.(value_of_name_exn "NN_SOL_SOCKET")
-        Symbol.(value_of_name_exn "NN_SENDFD")
-        (to_voidp fd_p) size
-    );
-  (Obj.magic (!@ fd_p) : Unix.file_descr)
+let set_reconnect_interval sock ival =
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_RECONNECT_IVL" ival
 
-let recv_fd socket =
-  let open Ctypes in
-  let fd_p = allocate int 0 in
-  let size = allocate size_t @@ size_of_int (sizeof int) in
-  ignore @@ raise_negative (fun () ->
-      nn_getsockopt socket
-        Symbol.(value_of_name_exn "NN_SOL_SOCKET")
-        Symbol.(value_of_name_exn "NN_RECVFD")
-        (to_voidp fd_p) size
-    );
-  (Obj.magic (!@ fd_p) : Unix.file_descr)
+let set_send_priority sock priority =
+  if priority < 1 || priority > 16 then invalid_arg "set_send_priority";
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_SNDPRIO" priority
+
+let set_ipv4_only sock b =
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_IPV4ONLY" (int_of_bool b)
 
 let term = nn_term

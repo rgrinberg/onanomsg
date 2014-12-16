@@ -25,10 +25,10 @@ For now these bindings are as close possible to the C interface but that is
 likely to change in the future.
 
 ## TODO
+
 - Set socket type specific options
 - Wrap getsockopt
 - Add support for devices
-- Fix reqrep
 
 ## License
 
