@@ -1,6 +1,10 @@
 open Nanomsg
 open Lwt.Infix
 
+let int_of_duration = function `Inf -> -1 | `Ms x -> x
+let int_of_bool = function false -> 0 | true -> 1
+let bool_of_int = function 0 -> false | _ -> true
+
 module Opt = struct
   let run = function
     | Some v -> v
@@ -179,6 +183,21 @@ let get_recv_timeout sock =
   | n when n < 0 -> `Inf
   | n -> `Ms n
 
+let get_reconnect_ival sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_RECONNECT_IVL"
+
+let get_reconnect_ival_max sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_RECONNECT_IVL_MAX"
+
+let get_send_prio sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_SNDPRIO"
+
+let get_recv_prio sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_RCVPRIO"
+
+let get_ipv4only sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_IPV4ONLY" |> bool_of_int
+
 let send_fd sock =
   let fd = getsockopt_int sock "NN_SOL_SOCKET" "NN_SNDFD" in
   (Obj.magic fd : Unix.file_descr)
@@ -333,13 +352,6 @@ let unsubscribe sock topic =
   setsockopt sock "NN_SUB" "NN_SUB_UNSUBSCRIBE"
     Ctypes.(allocate string topic) (String.length topic)
 
-let int_of_duration = function
-  | `Inf -> -1
-  | `Ms x -> x
-
-let int_of_bool = function
-  | false -> 0
-  | true -> 1
 
 let set_linger sock duration =
   setsockopt_int sock "NN_SOL_SOCKET" "NN_LINGER" (int_of_duration duration)
@@ -356,12 +368,19 @@ let set_send_timeout sock duration =
 let set_recv_timeout sock duration =
   setsockopt_int sock "NN_SOL_SOCKET" "NN_RCVTIMEO" (int_of_duration duration)
 
-let set_reconnect_interval sock ival =
+let set_reconnect_ival sock ival =
   setsockopt_int sock "NN_SOL_SOCKET" "NN_RECONNECT_IVL" ival
 
-let set_send_priority sock priority =
+let set_reconnect_ival_max sock ival =
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_RECONNECT_IVL_MAX" ival
+
+let set_send_prio sock priority =
   if priority < 1 || priority > 16 then invalid_arg "set_send_priority";
   setsockopt_int sock "NN_SOL_SOCKET" "NN_SNDPRIO" priority
+
+let set_recv_prio sock priority =
+  if priority < 1 || priority > 16 then invalid_arg "set_recv_priority";
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_RCVPRIO" priority
 
 let set_ipv4_only sock b =
   setsockopt_int sock "NN_SOL_SOCKET" "NN_IPV4ONLY" (int_of_bool b)

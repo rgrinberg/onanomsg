@@ -1,20 +1,3 @@
-module Symbol : sig
-  type t = private {
-    sp_value: int;
-    sp_name: string;
-    sp_ns: int;
-    sp_type: int;
-    sp_unit: int;
-  }
-
-  val value_of_name : string -> int option
-  val of_name : string -> t option
-  val value_of_name_exn : string -> int
-  val of_name_exn : string -> t
-  val errvalue_of_errno_exn : int -> string
-  val errvalue_of_errno : int -> string option
-end
-
 exception Error of string * string
 
 type domain = AF_SP | AF_SP_RAW
@@ -61,14 +44,19 @@ val unsubscribe : socket -> string -> unit
 
 val domain : socket -> domain
 val proto : socket -> proto
+val send_fd : socket -> Unix.file_descr
+val recv_fd : socket -> Unix.file_descr
+
 val get_linger : socket -> [`Inf | `Ms of int]
 val get_send_bufsize : socket -> int
 val get_recv_bufsize : socket -> int
 val get_send_timeout : socket -> [`Inf | `Ms of int]
 val get_recv_timeout : socket -> [`Inf | `Ms of int]
-
-val send_fd : socket -> Unix.file_descr
-val recv_fd : socket -> Unix.file_descr
+val get_reconnect_ival : socket -> int
+val get_reconnect_ival_max : socket -> int
+val get_send_prio : socket -> int
+val get_recv_prio : socket -> int
+val get_ipv4only : socket -> bool
 
 (** {1 Set socket options} *)
 
@@ -77,10 +65,12 @@ val set_send_bufsize : socket -> int -> unit
 val set_recv_bufsize : socket -> int -> unit
 val set_send_timeout : socket -> [`Inf | `Ms of int] -> unit
 val set_recv_timeout : socket -> [`Inf | `Ms of int] -> unit
-val set_reconnect_interval : socket -> int -> unit
-val set_send_priority : socket -> int -> unit
+val set_reconnect_ival : socket -> int -> unit
+val set_reconnect_ival_max : socket -> int -> unit
+val set_send_prio : socket -> int -> unit
+val set_recv_prio : socket -> int -> unit
 val set_ipv4_only : socket -> bool -> unit
 
-(** {1 Misc.} *)
+(** {1 Termination} *)
 
 val term : unit -> unit
