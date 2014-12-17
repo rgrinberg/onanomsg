@@ -121,7 +121,7 @@ let addr_of_string s =
 
 type eid = int
 
-let socket ~domain ~proto =
+let socket ?(domain=AF_SP) proto =
   raise_negative (fun () ->
       nn_socket (domain_to_enum domain) (proto_to_enum proto))
 

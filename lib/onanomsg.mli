@@ -9,7 +9,7 @@ type eid
 val string_of_addr : addr -> string
 val addr_of_string : string -> addr
 
-val socket : domain:domain -> proto:proto -> socket
+val socket : ?domain:domain -> proto -> socket
 
 val bind : socket -> addr -> eid
 val connect : socket -> addr -> eid

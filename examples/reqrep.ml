@@ -2,7 +2,7 @@ open Onanomsg
 
 let node0 addr =
   Printf.printf "node0: %s\n%!" @@ string_of_addr addr;
-  let s = socket ~domain:AF_SP ~proto:Rep in
+  let s = socket Rep in
   ignore (bind s addr);
   print_endline "starting to listen";
   let msg = B.recv_to_string s
@@ -12,7 +12,7 @@ let node0 addr =
 
 let node1 addr msg =
   Printf.printf "node1: %s\n" @@ string_of_addr addr;
-  let s = socket ~domain:AF_SP ~proto:Req in
+  let s = socket Req in
   let _ = connect s addr in
   Printf.printf "NODE1: SENDING '%s'\n" msg;
   B.send_from_string s msg;
