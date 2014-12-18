@@ -1,4 +1,5 @@
 PRJ nanomsg
+PKG cstruct
 PKG ctypes
 PKG ctypes.foreign
 PKG ipaddr

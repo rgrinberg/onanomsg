@@ -1,9 +1,10 @@
 true: debug, bin_annot, safe_string
 
 <lib>: include
+<lwt>: include
 <lib_test>: include
 
-<lib/*nanomsg.*>: package(ctypes), package(ipaddr), package(ppx_deriving.std), package(lwt)
-<lib/lwt*>: package(ctypes), package(ipaddr), package(ppx_deriving.std), package(lwt.ppx), package(lwt.unix)
-<lib_test/*>: package(ctypes.foreign), package(ipaddr), package(lwt.unix), package(lwt.ppx), package(oUnit)
-<examples/*>: package(ctypes.foreign), package(ipaddr), package(lwt.unix)
+<lib/nanomsg*>: package(cstruct), package(ctypes), package(ipaddr), package(ppx_deriving.std)
+<lib/nanomsg_lwt.*>: package(lwt.unix), package(lwt.ppx)
+<lib_test/*>: package(cstruct), package(ctypes.foreign), package(ipaddr), package(lwt.unix), package(lwt.ppx), package(oUnit)
+<examples/*>: package(cstruct), package(ctypes.foreign), package(ipaddr)

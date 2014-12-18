@@ -1,44 +1,34 @@
-exception Error of string * string
-
 type domain = AF_SP | AF_SP_RAW
 type proto = Pair | Pub | Sub | Req | Rep | Push | Pull | Surveyor | Respondant | Bus
-type addr = [`Inproc of string | `Ipc of string | `Tcp of Ipaddr.t * int]
 type socket
+
+type addr = [`Inproc of string | `Ipc of string | `Tcp of Ipaddr.t * int]
+val addr_of_string : string -> addr
+val string_of_addr : addr -> string
+
 type eid
 
-val string_of_addr : addr -> string
-val addr_of_string : string -> addr
+(** {1 Exceptions} *)
+
+exception Error of string * string
+
+
+(** {1 Socket management } *)
 
 val socket : ?domain:domain -> proto -> socket
-
 val bind : socket -> addr -> eid
 val connect : socket -> addr -> eid
-
-module B : sig
-  val send : socket -> Lwt_bytes.t -> int -> int -> unit
-  val send_from_bytes : socket -> Bytes.t -> int -> int -> unit
-  val send_from_string : socket -> string -> unit
-
-  val recv : socket -> (Lwt_bytes.t -> int -> 'a) -> 'a
-  val recv_to_string : socket -> (string -> 'a) -> 'a
-end
-
-module NB : sig
-  val send : socket -> Lwt_bytes.t -> int -> int -> unit Lwt.t
-  val send_from_bytes : socket -> Bytes.t -> int -> int -> unit Lwt.t
-  val send_from_string : socket -> string -> unit Lwt.t
-
-  val recv : socket -> (Lwt_bytes.t -> int -> 'a Lwt.t) -> 'a Lwt.t
-  val recv_to_string : socket -> (string -> 'a Lwt.t) -> 'a Lwt.t
-end
-
 val shutdown : socket -> eid -> unit
 val close : socket -> unit
 
-(** {1 Publish-Subscribe} *)
+(** {1 I/O } *)
 
-val subscribe : socket -> string -> unit
-val unsubscribe : socket -> string -> unit
+val send : ?block:bool -> socket -> Cstruct.t -> unit
+val send_from_bytes : ?block:bool -> socket -> Bytes.t -> int -> int -> unit
+val send_from_string : ?block:bool -> socket -> string -> unit
+
+val recv : ?block:bool -> socket -> (Cstruct.t -> 'a) -> 'a
+val recv_to_string : ?block:bool -> socket -> (string -> 'a) -> 'a
 
 (** {1 Get socket options} *)
 
@@ -60,6 +50,8 @@ val get_ipv4only : socket -> bool
 
 (** {1 Set socket options} *)
 
+(** {2 General} *)
+
 val set_linger : socket -> [`Inf | `Ms of int] -> unit
 val set_send_bufsize : socket -> int -> unit
 val set_recv_bufsize : socket -> int -> unit
@@ -70,6 +62,11 @@ val set_reconnect_ival_max : socket -> int -> unit
 val set_send_prio : socket -> int -> unit
 val set_recv_prio : socket -> int -> unit
 val set_ipv4_only : socket -> bool -> unit
+
+(** {2 PubSub} *)
+
+val subscribe : socket -> string -> unit
+val unsubscribe : socket -> string -> unit
 
 (** {1 Termination} *)
 

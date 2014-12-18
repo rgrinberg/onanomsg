@@ -1,14 +1,15 @@
 opam-version: "1.2"
-name: "onanomsg"
+name: "nanomsg"
 maintainer: "rudi.grinberg@gmail.com"
 build: [
-  [make]
+  ["ocaml" "pkg/build.ml" "native=true" "native-dynlink=true" "lwt=%{lwt:installed}%"]
 ]
 depends: [
-  "ocamlfind" {build}
   "conf-nanomsg"
+  "ocamlfind" {build}
   "ctypes" {>= "0.2"}
+  "cstruct"
   "ipaddr"
   "ppx_deriving"
-  "lwt"
 ]
+depopts: [ "lwt" ]

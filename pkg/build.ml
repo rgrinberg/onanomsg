@@ -2,10 +2,13 @@
 #directory "pkg"
 #use "topkg.ml"
 
+let lwt = Env.bool "lwt"
+
 let () =
-  Pkg.describe "onanomsg" ~builder:`OCamlbuild [
+  Pkg.describe "nanomsg" ~builder:`OCamlbuild [
     Pkg.lib "pkg/META";
-    Pkg.lib ~exts:Exts.module_library "lib/onanomsg";
+    Pkg.lib ~exts:Exts.module_library "lib/nanomsg";
+    Pkg.lib ~cond:lwt ~exts:Exts.module_library "lib/nanomsg_lwt";
     Pkg.bin ~auto:true "lib_test/suite";
 
     Pkg.bin ~auto:true "examples/pipeline";

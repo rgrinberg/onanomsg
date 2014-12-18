@@ -1,6 +1,8 @@
 open Lwt.Infix
 open OUnit2
-open Onanomsg
+
+open Nanomsg
+module NB = Nanomsg_lwt
 
 let socket_test ctx =
   let domains = [AF_SP; AF_SP_RAW] in
@@ -57,8 +59,8 @@ let reqrep_test ctx =
   let sender = socket Req in
   let _ = connect sender @@ `Inproc "*" in
   let packet = "testing" in
-  B.send_from_string sender packet;
-  let received = B.recv_to_string receiver (fun str -> str) in
+  send_from_string sender packet;
+  let received = recv_to_string receiver (fun str -> str) in
   close receiver;
   close sender;
   assert_equal packet received
@@ -71,8 +73,8 @@ let pubsub_local_test ctx =
   let packet = "foo bar baz" in
   let pub = socket Pub in
   let (_:eid) = bind pub address in
-  B.send_from_string pub packet;
-  let recv_msg = B.recv_to_string sub (fun str -> str) in
+  send_from_string pub packet;
+  let recv_msg = recv_to_string sub (fun str -> str) in
   close pub;
   close sub;
   assert_equal packet recv_msg
@@ -90,9 +92,9 @@ let pubsub_local_2subs_test ctx =
   let pub = socket Pub in
   let _ = bind pub addr1 in
   let _ = bind pub addr2 in
-  B.send_from_string pub packet;
-  let x1 = B.recv_to_string sub1 (fun str -> str) in
-  let x2 = B.recv_to_string sub2 (fun str -> str) in
+  send_from_string pub packet;
+  let x1 = recv_to_string sub1 (fun str -> str) in
+  let x2 = recv_to_string sub2 (fun str -> str) in
   close pub;
   close sub1;
   close sub2;

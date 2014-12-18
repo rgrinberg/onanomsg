@@ -1,15 +1,17 @@
-# Onanomsg
+# ONanomsg
 
-Ctypes based bindings to nanomsg for OCaml (alpha)
+`ctypes`-based bindings to [nanomsg](https://github.com/250bpm/nanomsg) for OCaml
 
 ## Installation
 
 The dependencies are:
+* cstruct
 * ctypes > 0.2
-* lwt > 2.4.6
 * ppx_deriving
 * ipaddr
 * [nanomsg](https://github.com/250bpm/nanomsg)
+* (optional) lwt > 2.4.6
+
 
 ```
 opam pin add .
@@ -26,10 +28,9 @@ likely to change in the future.
 
 ## TODO
 
-- Set socket type specific options
-- Wrap getsockopt
+- Set/Get socket type specific options
 - Add support for devices
 
 ## License
 
-Onanomsg is licensed under the [WTFPL](http://www.wtfpl.net/). See LICENSE.
+ONanomsg is licensed under the [WTFPL](http://www.wtfpl.net/). See LICENSE.

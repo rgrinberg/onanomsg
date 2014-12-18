@@ -1,13 +1,13 @@
-open Onanomsg
+open Nanomsg
 
 let node0 addr =
   Printf.printf "node0: %s\n%!" @@ string_of_addr addr;
   let s = socket Rep in
   ignore (bind s addr);
   print_endline "starting to listen";
-  let msg = B.recv_to_string s
+  let msg = recv_to_string s
       (fun str -> Printf.printf "NODE0: RECEIVED '%s'\n%!" str; str) in
-  B.send_from_string s msg;
+  send_from_string s msg;
   close s
 
 let node1 addr msg =
@@ -15,8 +15,8 @@ let node1 addr msg =
   let s = socket Req in
   let _ = connect s addr in
   Printf.printf "NODE1: SENDING '%s'\n" msg;
-  B.send_from_string s msg;
-  let recv_msg = B.recv_to_string s (fun str -> str) in
+  send_from_string s msg;
+  let recv_msg = recv_to_string s (fun str -> str) in
   close s;
   assert (msg = recv_msg)
 
