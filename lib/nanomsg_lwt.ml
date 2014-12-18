@@ -56,6 +56,9 @@ let send_from_bytes sock buf pos len =
           Symbol.(value_of_name_exn "NN_DONTWAIT")) >|= fun nb_written ->
     ignore nb_written
 
+let send_from_string_raw sock s pos len =
+  send_from_bytes sock (Bytes.unsafe_of_string s) pos len
+
 let send_from_string sock s =
   send_from_bytes sock (Bytes.unsafe_of_string s) 0 (String.length s)
 
@@ -69,12 +72,13 @@ let recv sock f =
   let ba_start = !@ ba_start_p in
   let ba = bigarray_of_ptr array1 nb_recv
       Bigarray.char (from_voidp char ba_start) in
-  f ba nb_recv >|= fun res ->
+  f ba >|= fun res ->
   let (_:int) = nn_freemsg ba_start in
   res
 
 let recv_to_string sock f =
-  recv sock (fun ba len ->
+  recv sock (fun ba ->
+      let len = Lwt_bytes.length ba in
       let buf = Bytes.create len in
       Lwt_bytes.blit_to_bytes ba 0 buf 0 len;
       f @@ Bytes.unsafe_to_string buf
