@@ -43,11 +43,13 @@ let pair_test ctx =
   let rec inner () =
     Lwt_list.iter_s (fun msg ->
         NB.send_from_string peer1 msg >>
-        NB.recv_to_string peer2 (fun recv_msg -> assert_equal msg recv_msg; Lwt.return_unit)
+        let%lwt recv_msg = NB.recv_to_string peer2 in
+        assert_equal msg recv_msg; Lwt.return_unit
       ) msgs >>
     Lwt_list.iter_s (fun msg ->
         NB.send_from_string peer2 msg >>
-        NB.recv_to_string peer1 (fun recv_msg -> assert_equal msg recv_msg; Lwt.return_unit)
+        let%lwt recv_msg = NB.recv_to_string peer1 in
+        assert_equal msg recv_msg; Lwt.return_unit
       ) msgs >|= fun () ->
     close peer1;
     close peer2
@@ -60,7 +62,7 @@ let reqrep_test ctx =
   let _ = connect sender @@ `Inproc "*" in
   let packet = "testing" in
   send_from_string sender packet;
-  let received = recv_to_string receiver (fun str -> str) in
+  let received = recv_to_string receiver in
   close receiver;
   close sender;
   assert_equal packet received
@@ -74,7 +76,7 @@ let pubsub_local_test ctx =
   let pub = socket Pub in
   let (_:eid) = bind pub address in
   send_from_string pub packet;
-  let recv_msg = recv_to_string sub (fun str -> str) in
+  let recv_msg = recv_to_string sub in
   close pub;
   close sub;
   assert_equal packet recv_msg
@@ -93,8 +95,8 @@ let pubsub_local_2subs_test ctx =
   let _ = bind pub addr1 in
   let _ = bind pub addr2 in
   send_from_string pub packet;
-  let x1 = recv_to_string sub1 (fun str -> str) in
-  let x2 = recv_to_string sub2 (fun str -> str) in
+  let x1 = recv_to_string sub1 in
+  let x2 = recv_to_string sub2 in
   close pub;
   close sub1;
   close sub2;

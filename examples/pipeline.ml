@@ -4,7 +4,8 @@ let node0 addr =
   let s = socket Pull in
   ignore (bind s addr);
   while true do
-    recv_to_string s (fun str -> Printf.printf "NODE0: RECEIVED '%s'\n%!" str)
+    let msg = recv_to_string s in
+    Printf.printf "NODE0: RECEIVED '%s'\n%!" msg
   done
 
 let node1 addr msg =

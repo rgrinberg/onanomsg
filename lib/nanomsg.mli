@@ -23,12 +23,20 @@ val close : socket -> unit
 
 (** {1 I/O } *)
 
-val send : ?block:bool -> socket -> Cstruct.t -> unit
-val send_from_bytes : ?block:bool -> socket -> Bytes.t -> int -> int -> unit
-val send_from_string : ?block:bool -> socket -> string -> unit
+(** {2 Zero-copy I/O} *)
 
+val send : ?block:bool -> socket -> Cstruct.t -> unit
 val recv : ?block:bool -> socket -> (Cstruct.t -> 'a) -> 'a
-val recv_to_string : ?block:bool -> socket -> (string -> 'a) -> 'a
+(** [recv ?block sock f] applies [f] to the received message. The
+    argument of [f] gets unallocated after [f] returns, so make sure
+    [f] {b never} let a reference to its argument escape. *)
+
+(** {2 Legacy I/O} *)
+
+val send_from_bytes : ?block:bool -> socket -> Bytes.t -> int -> int -> unit
+val send_from_string_raw : ?block:bool -> socket -> string -> int -> int -> unit
+val send_from_string : ?block:bool -> socket -> string -> unit
+val recv_to_string : ?block:bool -> socket -> string
 
 (** {1 Get socket options} *)
 

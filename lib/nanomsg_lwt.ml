@@ -76,10 +76,10 @@ let recv sock f =
   let (_:int) = nn_freemsg ba_start in
   res
 
-let recv_to_string sock f =
+let recv_to_string sock =
   recv sock (fun ba ->
       let len = Lwt_bytes.length ba in
       let buf = Bytes.create len in
       Lwt_bytes.blit_to_bytes ba 0 buf 0 len;
-      f @@ Bytes.unsafe_to_string buf
+      Lwt.return @@ Bytes.unsafe_to_string buf
     )
