@@ -2,9 +2,29 @@ type domain = AF_SP | AF_SP_RAW
 type proto = Pair | Pub | Sub | Req | Rep | Push | Pull | Surveyor | Respondant | Bus
 type socket
 
-type addr = [`Inproc of string | `Ipc of string | `Tcp of Ipaddr.t * int]
-val addr_of_string : string -> addr
-val string_of_addr : addr -> string
+module Addr : sig
+  type bind = [
+    | `All
+    | `V4 of Ipaddr.V4.t
+    | `V6 of Ipaddr.V6.t
+    | `Iface of string ] * int [@@deriving show]
+
+  type connect =
+    ([`V4 of Ipaddr.V4.t | `V6 of Ipaddr.V6.t | `Dns of string] *
+     [`V4 of Ipaddr.V4.t | `V6 of Ipaddr.V6.t | `Iface of string] option) * int
+      [@@deriving show]
+
+  type 'a t = [
+    | `Inproc of string
+    | `Ipc of string
+    | `Tcp of 'a
+  ] [@@deriving show]
+
+  val bind_of_string : string -> bind t
+  val bind_to_string : bind t -> string
+  val connect_of_string : string -> connect t
+  val connect_to_string : connect t -> string
+end
 
 type eid
 
@@ -12,12 +32,11 @@ type eid
 
 exception Error of string * string
 
-
 (** {1 Socket management } *)
 
 val socket : ?domain:domain -> proto -> socket
-val bind : socket -> addr -> eid
-val connect : socket -> addr -> eid
+val bind : socket -> Addr.bind Addr.t -> eid
+val connect : socket -> Addr.connect Addr.t -> eid
 val shutdown : socket -> eid -> unit
 val close : socket -> unit
 

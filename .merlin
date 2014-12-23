@@ -6,6 +6,7 @@ PKG ipaddr
 PKG lwt.unix
 PKG lwt.ppx
 PKG oUnit
+PKG containers
 
 S lib
 S lib_test

@@ -4,6 +4,44 @@ open OUnit2
 open Nanomsg
 module NB = Nanomsg_lwt
 
+let bind_addr_test ctx =
+  let open Addr in
+  assert_equal (`Inproc "9786/+-auieauie7658%=`!!")
+    (bind_of_string "inproc://9786/+-auieauie7658%=`!!");
+  assert_equal (`Ipc "9786/+-auieauie7658%=`!!")
+    (bind_of_string "ipc://9786/+-auieauie7658%=`!!");
+  assert_equal (`Tcp (`All,  1234))
+    (bind_of_string "tcp://*:1234");
+  assert_equal (`Tcp (`V4 Ipaddr.V4.localhost, 1234))
+    (bind_of_string "tcp://127.0.0.1:1234");
+  assert_equal ~msg:"ipv6" (`Tcp (`V6 Ipaddr.V6.localhost, 1234))
+    (bind_of_string "tcp://::1:1234");
+  assert_equal ~msg:"ifname" (`Tcp (`Iface "eth0", 1234))
+    (bind_of_string "tcp://eth0:1234")
+
+let connect_addr_test ctx =
+  let open Addr in
+  assert_equal (`Inproc "9786/+-auieauie7658%=`!!")
+    (connect_of_string "inproc://9786/+-auieauie7658%=`!!");
+  assert_equal (`Ipc "9786/+-auieauie7658%=`!!")
+    (connect_of_string "ipc://9786/+-auieauie7658%=`!!");
+  assert_equal
+    ~printer:(Addr.show Addr.pp_connect) ~msg:"tcp_with_iface"
+    (`Tcp ((`V4 Ipaddr.V4.localhost, Some (`Iface "eth0")), 1234))
+    (connect_of_string "tcp://eth0;127.0.0.1:1234");
+  assert_equal
+    ~printer:(Addr.show Addr.pp_connect) ~msg:"dns"
+    (`Tcp ((`Dns "localhost", None), 1234))
+    (connect_of_string "tcp://localhost:1234");
+  assert_equal
+    ~printer:(Addr.show Addr.pp_connect) ~msg:"dns_with_iface"
+    (`Tcp ((`Dns "localhost", Some (`Iface "lo0")), 1234))
+    (connect_of_string "tcp://lo0;localhost:1234");
+  assert_equal
+    ~printer:(Addr.show Addr.pp_connect) ~msg:"ipv6_iface_with_ipv6_addr"
+    (`Tcp ((`V6 (Ipaddr.V6.of_string_exn "dead::beef"), Some (`V6 Ipaddr.V6.localhost)), 1234))
+    (connect_of_string "tcp://::1;dead::beef:1234")
+
 let socket_test ctx =
   let domains = [AF_SP; AF_SP_RAW] in
   let protos = [Pair; Pub; Sub; Req; Rep; Push; Pull; Surveyor; Respondant; Bus] in
@@ -106,6 +144,8 @@ let pubsub_local_2subs_test ctx =
 let suite =
   "Nanomsg">:::
   [
+    "bind_addr" >:: bind_addr_test;
+    "connect_addr" >:: connect_addr_test;
     "socket" >:: socket_test;
     "send_recv_fd" >:: send_recv_fd_test;
     "pair" >:: pair_test;

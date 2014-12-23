@@ -18,28 +18,107 @@ type proto =
   | Bus [@value 112]
       [@@deriving enum]
 
-type addr = [`Inproc of string | `Ipc of string | `Tcp of Ipaddr.t * int]
+module Addr = struct
+  module V4 = struct
+    include Ipaddr.V4
+    let pp = pp_hum
+  end
 
-let string_of_addr = function
-  | `Inproc a -> "inproc://" ^ a
-  | `Ipc a -> "ipc://" ^ a
-  | `Tcp (a, p) -> "tcp://" ^ Ipaddr.to_string a ^ ":" ^ string_of_int p
+  module V6 = struct
+    include Ipaddr.V6
+    let pp = pp_hum
+  end
 
-let addr_of_string s =
-  let len = String.length s in
-  let addr_start = String.index s '/' + 2 in
-  let addr_len = len - addr_start in
-  match String.sub s 0 (addr_start - 3) with
-  | "inproc" -> `Inproc (String.sub s addr_start addr_len)
-  | "ipc" -> `Ipc (String.sub s addr_start addr_len)
-  | "tcp" ->
-    let port_start = String.rindex s ':' + 1 in
-    let port = String.sub s port_start (len - port_start) in
-    let port, port_len = int_of_string port, String.length port in
-    let addr = Ipaddr.of_string_exn @@
-      String.sub s addr_start (addr_len - port_len - 1) in
-    `Tcp (addr, port)
-  | _ -> invalid_arg "addr_of_string"
+  type bind = [
+    | `All
+    | `V4 of V4.t
+    | `V6 of V6.t
+    | `Iface of string ] * int [@@deriving show]
+
+  type connect =
+    ([`V4 of V4.t | `V6 of V6.t | `Dns of string] *
+     [`V4 of V4.t | `V6 of V6.t | `Iface of string] option) * int
+      [@@deriving show]
+
+  type 'a t = [
+    | `Inproc of string
+    | `Ipc of string
+    | `Tcp of 'a
+  ] [@@deriving show]
+
+  let bind_iface_of_string = function
+    | "*" -> `All
+    | s when String.contains s ':' -> `V6 (Ipaddr.V6.of_string_exn s)
+    | s -> try `V4 (Ipaddr.V4.of_string_exn s) with _ -> `Iface s
+
+  let connect_iface_of_string = function
+    | s when String.contains s ':' -> `V6 (Ipaddr.V6.of_string_exn s)
+    | s -> try `V4 (Ipaddr.V4.of_string_exn s) with _ -> `Iface s
+
+  let iface_to_string = function
+    | `All -> "*"
+    | `V4 v4 -> Ipaddr.V4.to_string v4
+    | `V6 v6 -> Ipaddr.V6.to_string v6
+    | `Iface ifname -> ifname
+
+  let addr_of_string = function
+    | s when String.contains s ':' -> `V6 (Ipaddr.V6.of_string_exn s)
+    | s -> try `V4 (Ipaddr.V4.of_string_exn s) with _ -> `Dns s
+
+  let addr_to_string = function
+    | `V4 v4 -> Ipaddr.V4.to_string v4
+    | `V6 v6 -> Ipaddr.V6.to_string v6
+    | `Dns n -> n
+
+  let bind_to_string = function
+    | `Inproc a -> "inproc://" ^ a
+    | `Ipc a -> "ipc://" ^ a
+    | `Tcp (bind, port) ->
+      let interface = iface_to_string bind in
+      "tcp://" ^ interface ^ ":" ^ string_of_int port
+
+  let connect_to_string = function
+    | `Inproc a -> "inproc://" ^ a
+    | `Ipc a -> "ipc://" ^ a
+    | `Tcp ((addr, iface), port) ->
+      let iface = CCOpt.map iface_to_string iface in
+      let addr = addr_to_string addr in
+      "tcp://" ^ (CCOpt.get "" iface) ^ ";" ^ addr ^ ":" ^ string_of_int port
+
+  let of_string s =
+    let len = String.length s in
+    let addr_start = String.index s '/' + 2 in
+    let addr_len = len - addr_start in
+    match String.sub s 0 (addr_start - 3) with
+    | "inproc" -> `Inproc (String.sub s addr_start addr_len)
+    | "ipc" -> `Ipc (String.sub s addr_start addr_len)
+    | "tcp" ->
+      let port_start = String.rindex s ':' + 1 in
+      let port = String.sub s port_start (len - port_start) in
+      let port, port_len = int_of_string port, String.length port in
+      let addr = String.sub s addr_start (addr_len - port_len - 1) in
+      `Tcp (addr, port)
+    | _ -> invalid_arg "addr_of_string"
+
+  let bind_of_string s = match of_string s with
+    | `Inproc _ | `Ipc _ as s -> s
+    | `Tcp (addr, port) ->
+      let iface = bind_iface_of_string addr in
+      `Tcp (iface, port)
+
+  let connect_of_string s = match of_string s with
+    | `Inproc _ | `Ipc _ as s -> s
+    | `Tcp (iface_addr, port) ->
+      if String.contains iface_addr ';' then
+        let len = String.length iface_addr in
+        let addr_start = String.index iface_addr ';' + 1 in
+        let addr = String.sub iface_addr addr_start (len - addr_start) in
+        let iface = String.(sub iface_addr 0 @@ addr_start - 1) in
+        `Tcp ((addr_of_string addr, Some (connect_iface_of_string iface)), port)
+      else
+        `Tcp ((addr_of_string iface_addr, None), port)
+end
+
 
 type eid = int
 
@@ -48,10 +127,10 @@ let socket ?(domain=AF_SP) proto =
       nn_socket (domain_to_enum domain) (proto_to_enum proto))
 
 let bind sock addr =
-  raise_negative (fun () -> nn_bind sock @@ string_of_addr addr)
+  raise_negative (fun () -> nn_bind sock @@ Addr.bind_to_string addr)
 
 let connect sock addr =
-  raise_negative (fun () -> nn_connect sock @@ string_of_addr addr)
+  raise_negative (fun () -> nn_connect sock @@ Addr.connect_to_string addr)
 
 let shutdown s e =
   ignore @@ raise_negative (fun () -> nn_shutdown s e)
