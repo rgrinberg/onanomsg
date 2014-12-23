@@ -1,6 +1,6 @@
 version = "0.2"
 description = "Bindings to nanomsg"
-requires = "cstruct ctypes.foreign ipaddr ppx_deriving.std"
+requires = "cstruct ctypes.foreign ipaddr ppx_deriving.std containers"
 archive(byte) = "nanomsg.cma"
 archive(byte, plugin) = "nanomsg.cma"
 archive(native) = "nanomsg.cmxa"
