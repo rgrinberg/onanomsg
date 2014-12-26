@@ -5,9 +5,9 @@ let node0 addr =
   let s = socket Rep in
   ignore (bind s @@ Addr.bind_of_string addr);
   print_endline "starting to listen";
-  let msg = recv_to_string s in
+  let msg = recv_string s in
   Printf.printf "NODE0: RECEIVED '%s'\n%!" msg;
-  send_from_string s msg;
+  send_string s msg;
   close s
 
 let node1 addr msg =
@@ -15,8 +15,8 @@ let node1 addr msg =
   let s = socket Req in
   let _ = connect s @@ Addr.connect_of_string addr in
   Printf.printf "NODE1: SENDING '%s'\n" msg;
-  send_from_string s msg;
-  let recv_msg = recv_to_string s in
+  send_string s msg;
+  let recv_msg = recv_string s in
   close s;
   assert (msg = recv_msg)
 

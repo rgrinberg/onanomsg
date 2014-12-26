@@ -219,7 +219,7 @@ let send ?(block=true) sock buf =
     ignore @@ raise_notequal buf.len
       (fun () -> nn_send sock nn_buf_p nn_msg (int_of_bool block))
 
-let send_from_bytes ?(block=true) sock buf pos len =
+let send_bytes_buf ?(block=true) sock buf pos len =
   if pos < 0 || len < 0 || pos + len > Bytes.length buf
   then invalid_arg "bounds";
   let nn_buf = nn_allocmsg (size_of_int len) 0 in
@@ -233,11 +233,14 @@ let send_from_bytes ?(block=true) sock buf pos len =
     ignore @@ raise_notequal len
       (fun () -> nn_send sock nn_buf_p nn_msg (int_of_bool block))
 
-let send_from_string_raw ?(block=true) sock s pos len =
-  send_from_bytes ~block sock (Bytes.unsafe_of_string s) pos len
+let send_bytes ?(block=true) sock b =
+  send_bytes_buf ~block sock b 0 @@ Bytes.length b
 
-let send_from_string ?(block=true) sock s =
-  send_from_bytes ~block sock (Bytes.unsafe_of_string s) 0 (String.length s)
+let send_string_buf ?(block=true) sock s pos len =
+  send_bytes_buf ~block sock (Bytes.unsafe_of_string s) pos len
+
+let send_string ?(block=true) sock s =
+  send_bytes_buf ~block sock (Bytes.unsafe_of_string s) 0 (String.length s)
 
 let recv ?(block=true) sock f =
   let open Ctypes in
@@ -254,12 +257,18 @@ let recv ?(block=true) sock f =
     let (_:int) = nn_freemsg ba_start in
     res
 
-let recv_to_string ?(block=true) sock =
+let recv_bytes_buf ?(block=true) sock buf pos =
+  recv ~block sock (fun ba -> Cstruct.(blit_to_bytes ba 0 buf pos ba.len))
+
+let recv_bytes ?(block=true) sock =
   recv ~block sock (fun ba ->
       let buf = Bytes.create ba.Cstruct.len in
       Cstruct.(blit_to_bytes ba 0 buf 0 ba.len);
-      Bytes.unsafe_to_string buf
+      buf
     )
+
+let recv_string ?(block=true) sock =
+  recv_bytes ~block sock |> Bytes.unsafe_to_string
 
 let setsockopt sock level opt optval optvalsize =
   let open Ctypes in

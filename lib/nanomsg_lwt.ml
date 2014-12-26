@@ -40,7 +40,7 @@ let send sock buf pos len =
           Symbol.(value_of_name_exn "NN_DONTWAIT")) >|= fun nb_written ->
     ignore nb_written
 
-let send_from_bytes sock buf pos len =
+let send_bytes_buf sock buf pos len =
   if pos < 0 || len < 0 || pos + len > Bytes.length buf
   then invalid_arg "bounds";
   let nn_buf = nn_allocmsg (size_of_int len) 0 in
@@ -56,11 +56,14 @@ let send_from_bytes sock buf pos len =
           Symbol.(value_of_name_exn "NN_DONTWAIT")) >|= fun nb_written ->
     ignore nb_written
 
-let send_from_string_raw sock s pos len =
-  send_from_bytes sock (Bytes.unsafe_of_string s) pos len
+let send_bytes sock b =
+  send_bytes_buf sock b 0 (Bytes.length b)
 
-let send_from_string sock s =
-  send_from_bytes sock (Bytes.unsafe_of_string s) 0 (String.length s)
+let send_string_buf sock s pos len =
+  send_bytes_buf sock (Bytes.unsafe_of_string s) pos len
+
+let send_string sock s =
+  send_bytes_buf sock (Bytes.unsafe_of_string s) 0 (String.length s)
 
 let recv sock f =
   let open Lwt_unix in
@@ -76,10 +79,20 @@ let recv sock f =
   let (_:int) = nn_freemsg ba_start in
   res
 
-let recv_to_string sock =
+let recv_bytes_buf sock buf pos =
+  recv sock (fun ba ->
+      let len = Lwt_bytes.length ba in
+      Lwt_bytes.blit_to_bytes ba 0 buf pos len;
+      Lwt.return_unit
+    )
+
+let recv_bytes sock =
   recv sock (fun ba ->
       let len = Lwt_bytes.length ba in
       let buf = Bytes.create len in
       Lwt_bytes.blit_to_bytes ba 0 buf 0 len;
-      Lwt.return @@ Bytes.unsafe_to_string buf
+      Lwt.return buf
     )
+
+let recv_string sock = recv_bytes sock >|= Bytes.unsafe_to_string
+

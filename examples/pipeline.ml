@@ -4,7 +4,7 @@ let node0 addr =
   let s = socket Pull in
   ignore (bind s addr);
   while true do
-    let msg = recv_to_string s in
+    let msg = recv_string s in
     Printf.printf "NODE0: RECEIVED '%s'\n%!" msg
   done
 
@@ -12,7 +12,7 @@ let node1 addr msg =
   let s = socket Push in
   let endpoint = connect s addr in
   Printf.printf "NODE1: SENDING '%s'\n%!" msg;
-  send_from_string s msg;
+  send_string s msg;
   shutdown s endpoint
 
 let () =

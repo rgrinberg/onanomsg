@@ -12,7 +12,13 @@ val recv : socket -> (Lwt_bytes.t -> 'a Lwt.t) -> 'a Lwt.t
 
 (** {2 Legacy I/O} *)
 
-val send_from_bytes : socket -> Bytes.t -> int -> int -> unit Lwt.t
-val send_from_string_raw : socket -> string -> int -> int -> unit Lwt.t
-val send_from_string : socket -> string -> unit Lwt.t
-val recv_to_string : socket -> string Lwt.t
+val send_string : socket -> string -> unit Lwt.t
+val send_bytes : socket -> Bytes.t -> unit Lwt.t
+
+val send_string_buf : socket -> string -> int -> int -> unit Lwt.t
+val send_bytes_buf : socket -> Bytes.t -> int -> int -> unit Lwt.t
+
+val recv_string : socket -> string Lwt.t
+val recv_bytes : socket -> Bytes.t Lwt.t
+
+val recv_bytes_buf : socket -> Bytes.t -> int -> unit Lwt.t

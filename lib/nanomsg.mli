@@ -52,10 +52,16 @@ val recv : ?block:bool -> socket -> (Cstruct.t -> 'a) -> 'a
 
 (** {2 Legacy I/O} *)
 
-val send_from_bytes : ?block:bool -> socket -> Bytes.t -> int -> int -> unit
-val send_from_string_raw : ?block:bool -> socket -> string -> int -> int -> unit
-val send_from_string : ?block:bool -> socket -> string -> unit
-val recv_to_string : ?block:bool -> socket -> string
+val send_string : ?block:bool -> socket -> string -> unit
+val send_bytes : ?block:bool -> socket -> Bytes.t -> unit
+
+val send_string_buf : ?block:bool -> socket -> string -> int -> int -> unit
+val send_bytes_buf : ?block:bool -> socket -> Bytes.t -> int -> int -> unit
+
+val recv_string : ?block:bool -> socket -> string
+val recv_bytes : ?block:bool -> socket -> Bytes.t
+
+val recv_bytes_buf :?block:bool -> socket -> Bytes.t -> int -> unit
 
 (** {1 Get socket options} *)
 
