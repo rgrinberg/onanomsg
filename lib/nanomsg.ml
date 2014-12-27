@@ -33,17 +33,18 @@ module Addr = struct
     | `All
     | `V4 of V4.t
     | `V6 of V6.t
-    | `Iface of string ] * int [@@deriving show]
+    | `Iface of string ]
+      [@@deriving show]
 
   type connect =
     ([`V4 of V4.t | `V6 of V6.t | `Dns of string] *
-     [`V4 of V4.t | `V6 of V6.t | `Iface of string] option) * int
+     [`V4 of V4.t | `V6 of V6.t | `Iface of string] option)
       [@@deriving show]
 
   type 'a t = [
     | `Inproc of string
     | `Ipc of string
-    | `Tcp of 'a
+    | `Tcp of 'a * int
   ] [@@deriving show]
 
   let bind_iface_of_string = function
