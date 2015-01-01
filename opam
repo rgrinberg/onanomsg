@@ -8,7 +8,7 @@ depends: [
   "conf-nanomsg"
   "ocamlfind" {build}
   "ctypes" {>= "0.2"}
-  "cstruct"
+  "containers"
   "ipaddr"
   "ppx_deriving"
 ]
