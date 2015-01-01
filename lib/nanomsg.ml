@@ -206,19 +206,22 @@ let recv_fd sock =
   let fd = getsockopt_int sock "NN_SOL_SOCKET" "NN_RCVFD" in
   (Obj.magic fd : Unix.file_descr)
 
-let send ?(block=true) sock buf =
-  let open Cstruct in
-  let nn_buf = nn_allocmsg (size_of_int buf.len) 0 in
+let send_bigstring_buf ?(block=true) sock buf pos len =
+  if pos < 0 || len < 0 || pos + len > CCBigstring.size buf
+  then invalid_arg "bounds";
+  let nn_buf = nn_allocmsg (size_of_int len) 0 in
   match nn_buf with
   | None -> throw ()
   | Some nn_buf ->
     let nn_buf_p = Ctypes.(allocate (ptr void) nn_buf) in
-    let ba = of_bigarray @@
-      Ctypes.(bigarray_of_ptr array1 buf.len
-                Bigarray.char @@ from_voidp char nn_buf) in
-    blit buf buf.off ba 0 buf.len;
-    ignore @@ raise_notequal buf.len
+    let ba = Ctypes.(bigarray_of_ptr array1 len
+                       Bigarray.char @@ from_voidp char nn_buf) in
+    CCBigstring.blit buf pos ba 0 len;
+    ignore @@ raise_notequal len
       (fun () -> nn_send sock nn_buf_p nn_msg (int_of_bool block))
+
+let send_bigstring ?(block=true) sock buf =
+  send_bigstring_buf ~block sock buf 0 @@ CCBigstring.size buf
 
 let send_bytes_buf ?(block=true) sock buf pos len =
   if pos < 0 || len < 0 || pos + len > Bytes.length buf
@@ -228,9 +231,9 @@ let send_bytes_buf ?(block=true) sock buf pos len =
   | None -> throw ()
   | Some nn_buf ->
     let nn_buf_p = Ctypes.(allocate (ptr void) nn_buf) in
-    let ba = Cstruct.of_bigarray @@ Ctypes.(bigarray_of_ptr array1 len
+    let ba = Ctypes.(bigarray_of_ptr array1 len
                        Bigarray.char @@ from_voidp char nn_buf) in
-    Cstruct.blit_from_bytes buf pos ba 0 len;
+    CCBigstring.blit_of_bytes buf pos ba 0 len;
     ignore @@ raise_notequal len
       (fun () -> nn_send sock nn_buf_p nn_msg (int_of_bool block))
 
@@ -252,21 +255,22 @@ let recv ?(block=true) sock f =
   let ba_start = !@ ba_start_p in
   if nb_recv < 0 then throw ()
   else
-    let ba = Cstruct.of_bigarray @@ bigarray_of_ptr array1 nb_recv
+    let ba = bigarray_of_ptr array1 nb_recv
         Bigarray.char (from_voidp char ba_start) in
     let res = f ba in
     let (_:int) = nn_freemsg ba_start in
     res
 
 let recv_bytes_buf ?(block=true) sock buf pos =
-  recv ~block sock (fun ba -> Cstruct.(blit_to_bytes ba 0 buf pos ba.len))
+  recv ~block sock
+    (fun ba -> CCBigstring.(blit_to_bytes ba 0 buf pos @@ size ba))
 
 let recv_bytes ?(block=true) sock =
   recv ~block sock (fun ba ->
-      let buf = Bytes.create ba.Cstruct.len in
-      Cstruct.(blit_to_bytes ba 0 buf 0 ba.len);
-      buf
-    )
+      let len = CCBigstring.size ba in
+      let buf = Bytes.create len in
+      CCBigstring.blit_to_bytes ba 0 buf 0 len;
+      buf)
 
 let recv_string ?(block=true) sock =
   recv_bytes ~block sock |> Bytes.unsafe_to_string

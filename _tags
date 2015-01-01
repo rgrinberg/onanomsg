@@ -4,7 +4,7 @@ true: debug, bin_annot, safe_string
 <lwt>: include
 <lib_test>: include
 
-<lib/nanomsg*>: package(cstruct), \
+<lib/nanomsg*>: package(containers.bigarray), \
 		package(ctypes), \
 		package(ipaddr), \
 		package(ppx_deriving.std), \
@@ -13,7 +13,7 @@ true: debug, bin_annot, safe_string
 
 <lib/nanomsg_lwt.*>: package(lwt.unix), package(lwt.ppx)
 
-<lib_test/*>: package(cstruct), \
+<lib_test/*>: package(containers.bigarray), \
 	      package(ctypes.foreign), \
 	      package(ipaddr), \
 	      package(lwt.unix), \
@@ -21,7 +21,7 @@ true: debug, bin_annot, safe_string
 	      package(oUnit), \
 	      package(containers)
 
-<examples/*>: package(cstruct), \
+<examples/*>: package(containers.bigarray), \
 	      package(ctypes.foreign), \
 	      package(ipaddr), \
 	      package(containers)

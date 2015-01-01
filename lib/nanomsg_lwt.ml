@@ -24,8 +24,8 @@ let raise_if sock io_event cond f =
 let raise_negative sock io_event f = raise_if sock io_event (fun x -> x < 0) f
 let raise_notequal sock io_event v f = raise_if sock io_event (fun x -> x <> v) f
 
-let send sock buf pos len =
-  if pos < 0 || len < 0 || pos + len > Lwt_bytes.length buf
+let send_bigstring_buf sock buf pos len =
+  if pos < 0 || len < 0 || pos + len > CCBigstring.size buf
   then invalid_arg "bounds";
   let nn_buf = nn_allocmsg (size_of_int len) 0 in
   match nn_buf with
@@ -34,11 +34,14 @@ let send sock buf pos len =
     let nn_buf_p = Ctypes.(allocate (ptr void) nn_buf) in
     let ba = Ctypes.(bigarray_of_ptr array1 len
                        Bigarray.char @@ from_voidp char nn_buf) in
-    Lwt_bytes.blit buf pos ba 0 len;
+    CCBigstring.blit buf pos ba 0 len;
     raise_notequal sock Lwt_unix.Write len
       (fun () -> nn_send (Obj.magic sock : int) nn_buf_p nn_msg
           Symbol.(value_of_name_exn "NN_DONTWAIT")) >|= fun nb_written ->
     ignore nb_written
+
+let send_bigstring sock buf =
+  send_bigstring_buf sock buf 0 @@ CCBigstring.size buf
 
 let send_bytes_buf sock buf pos len =
   if pos < 0 || len < 0 || pos + len > Bytes.length buf
@@ -50,7 +53,7 @@ let send_bytes_buf sock buf pos len =
     let nn_buf_p = Ctypes.(allocate (ptr void) nn_buf) in
     let ba = Ctypes.(bigarray_of_ptr array1 len
                        Bigarray.char @@ from_voidp char nn_buf) in
-    Lwt_bytes.blit_from_bytes buf pos ba 0 len;
+    CCBigstring.blit_of_bytes buf pos ba 0 len;
     raise_notequal sock Lwt_unix.Write len
       (fun () -> nn_send (Obj.magic sock : int)  nn_buf_p nn_msg
           Symbol.(value_of_name_exn "NN_DONTWAIT")) >|= fun nb_written ->
@@ -81,16 +84,16 @@ let recv sock f =
 
 let recv_bytes_buf sock buf pos =
   recv sock (fun ba ->
-      let len = Lwt_bytes.length ba in
-      Lwt_bytes.blit_to_bytes ba 0 buf pos len;
+      let len = CCBigstring.size ba in
+      CCBigstring.blit_to_bytes ba 0 buf pos len;
       Lwt.return_unit
     )
 
 let recv_bytes sock =
   recv sock (fun ba ->
-      let len = Lwt_bytes.length ba in
+      let len = CCBigstring.size ba in
       let buf = Bytes.create len in
-      Lwt_bytes.blit_to_bytes ba 0 buf 0 len;
+      CCBigstring.blit_to_bytes ba 0 buf 0 len;
       Lwt.return buf
     )
 

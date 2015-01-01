@@ -45,19 +45,21 @@ val close : socket -> unit
 
 (** {2 Zero-copy I/O} *)
 
-val send : ?block:bool -> socket -> Cstruct.t -> unit
-val recv : ?block:bool -> socket -> (Cstruct.t -> 'a) -> 'a
+val send_bigstring : ?block:bool -> socket -> CCBigstring.t -> unit
+val send_bigstring_buf : ?block:bool -> socket -> CCBigstring.t -> int -> int -> unit
+
+val send_string : ?block:bool -> socket -> string -> unit
+val send_string_buf : ?block:bool -> socket -> string -> int -> int -> unit
+
+val send_bytes : ?block:bool -> socket -> Bytes.t -> unit
+val send_bytes_buf : ?block:bool -> socket -> Bytes.t -> int -> int -> unit
+
+val recv : ?block:bool -> socket -> (CCBigstring.t -> 'a) -> 'a
 (** [recv ?block sock f] applies [f] to the received message. The
     argument of [f] gets unallocated after [f] returns, so make sure
     [f] {b never} let a reference to its argument escape. *)
 
 (** {2 Legacy I/O} *)
-
-val send_string : ?block:bool -> socket -> string -> unit
-val send_bytes : ?block:bool -> socket -> Bytes.t -> unit
-
-val send_string_buf : ?block:bool -> socket -> string -> int -> int -> unit
-val send_bytes_buf : ?block:bool -> socket -> Bytes.t -> int -> int -> unit
 
 val recv_string : ?block:bool -> socket -> string
 val recv_bytes : ?block:bool -> socket -> Bytes.t
