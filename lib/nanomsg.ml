@@ -84,7 +84,9 @@ module Addr = struct
     | `Tcp ((addr, iface), port) ->
       let iface = CCOpt.map iface_to_string iface in
       let addr = addr_to_string addr in
-      "tcp://" ^ (CCOpt.get "" iface) ^ ";" ^ addr ^ ":" ^ string_of_int port
+      "tcp://" ^
+      (match iface with Some i -> i ^ ";" | None -> "")
+      ^ addr ^ ":" ^ string_of_int port
 
   let of_string s =
     let len = String.length s in
