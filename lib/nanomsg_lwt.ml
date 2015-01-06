@@ -86,7 +86,7 @@ let recv_bytes_buf sock buf pos =
   recv sock (fun ba ->
       let len = CCBigstring.size ba in
       CCBigstring.blit_to_bytes ba 0 buf pos len;
-      Lwt.return_unit
+      Lwt.return len
     )
 
 let recv_bytes sock =

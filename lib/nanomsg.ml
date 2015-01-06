@@ -265,7 +265,11 @@ let recv ?(block=true) sock f =
 
 let recv_bytes_buf ?(block=true) sock buf pos =
   recv ~block sock
-    (fun ba -> CCBigstring.(blit_to_bytes ba 0 buf pos @@ size ba))
+    (fun ba ->
+       let len = CCBigstring.size ba in
+       CCBigstring.(blit_to_bytes ba 0 buf pos len);
+       len
+    )
 
 let recv_bytes ?(block=true) sock =
   recv ~block sock (fun ba ->

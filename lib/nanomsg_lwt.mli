@@ -22,4 +22,4 @@ val recv : socket -> (CCBigstring.t -> 'a Lwt.t) -> 'a Lwt.t
 
 val recv_string : socket -> string Lwt.t
 val recv_bytes : socket -> Bytes.t Lwt.t
-val recv_bytes_buf : socket -> Bytes.t -> int -> unit Lwt.t
+val recv_bytes_buf : socket -> Bytes.t -> int -> int Lwt.t

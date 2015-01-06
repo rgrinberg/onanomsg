@@ -64,7 +64,7 @@ val recv : ?block:bool -> socket -> (CCBigstring.t -> 'a) -> 'a
 val recv_string : ?block:bool -> socket -> string
 val recv_bytes : ?block:bool -> socket -> Bytes.t
 
-val recv_bytes_buf :?block:bool -> socket -> Bytes.t -> int -> unit
+val recv_bytes_buf :?block:bool -> socket -> Bytes.t -> int -> int
 
 (** {1 Get socket options} *)
 
