@@ -191,14 +191,29 @@ let pubsub_local_2subs_test ctx =
   assert_equal packet x2
 
 let tcp_pubsub_test ctx =
-  let port = 56352 in
-  let pub = socket Pub in
-  let sub = socket Sub in
-  set_ipv4_only pub false;
-  set_ipv4_only sub false;
-  let _ = bind pub @@ `Tcp (`All, port) in
-  let _ = connect sub @@ `Tcp ((`V6 Ipaddr.V6.localhost, None), port) in
-  ()
+  let inner () =
+    let port = 56352 in
+    let pub = socket Pub in
+    let sub = socket Sub in
+    set_ipv4_only pub false;
+    set_ipv4_only sub false;
+    let _ = bind pub @@ `Tcp (`All, port) in
+    let _ = connect sub @@ `Tcp ((`V6 Ipaddr.V6.localhost, None), port) in
+    Nanomsg.subscribe sub "";
+    let msg = "bleh" in
+    let len = String.length msg in
+    let recv_msg = Bytes.create @@ String.length msg in
+    let recv_msg' = Bytes.create @@ String.length msg in
+    Nanomsg_lwt.send_string pub msg >>
+    Nanomsg_lwt.recv_string sub >>= fun str ->
+    assert_equal msg str;
+    Nanomsg_lwt.send_string_buf pub msg 0 len >>
+    Nanomsg_lwt.recv_bytes_buf sub recv_msg 0 >>= fun (_:int) ->
+    assert_equal msg (Bytes.unsafe_to_string recv_msg);
+    Nanomsg_lwt.send_bytes pub recv_msg >>
+    Nanomsg_lwt.recv_bytes_buf sub recv_msg' 0 >|= fun (_:int) ->
+    assert_equal recv_msg recv_msg'
+  in Lwt_main.run @@ inner ()
 
 let suite =
   "Nanomsg">:::
