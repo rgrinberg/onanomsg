@@ -204,14 +204,17 @@ let tcp_pubsub_test ctx =
     let len = String.length msg in
     let recv_msg = Bytes.create @@ String.length msg in
     let recv_msg' = Bytes.create @@ String.length msg in
-    Nanomsg_lwt.send_string pub msg >>
+    let th = Nanomsg_lwt.send_string pub msg in
     Nanomsg_lwt.recv_string sub >>= fun str ->
+    assert_equal (Lwt.Return ()) (Lwt.state th);
     assert_equal msg str;
-    Nanomsg_lwt.send_string_buf pub msg 0 len >>
+    let th = Nanomsg_lwt.send_string_buf pub msg 0 len in
     Nanomsg_lwt.recv_bytes_buf sub recv_msg 0 >>= fun (_:int) ->
+    assert_equal (Lwt.Return ()) (Lwt.state th);
     assert_equal msg (Bytes.unsafe_to_string recv_msg);
-    Nanomsg_lwt.send_bytes pub recv_msg >>
+    let th = Nanomsg_lwt.send_bytes pub recv_msg in
     Nanomsg_lwt.recv_bytes_buf sub recv_msg' 0 >|= fun (_:int) ->
+    assert_equal (Lwt.Return ()) (Lwt.state th);
     assert_equal recv_msg recv_msg'
   in Lwt_main.run @@ inner ()
 
