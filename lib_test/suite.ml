@@ -215,8 +215,31 @@ let tcp_pubsub_test ctx =
     let th = Nanomsg_lwt.send_bytes pub recv_msg in
     Nanomsg_lwt.recv_bytes_buf sub recv_msg' 0 >|= fun (_:int) ->
     assert_equal (Lwt.Return ()) (Lwt.state th);
-    assert_equal recv_msg recv_msg'
+    assert_equal recv_msg recv_msg';
+    close pub; close sub
   in Lwt_main.run @@ inner ()
+
+let pipeline_local_test ctx =
+  let msgs = [|"foo"; "bar"; "baz"|] in
+  let receiver addr =
+    let s = socket Pull in
+    let _ = bind s addr in
+    let rec inner n =
+      if n > 2
+      then (close s; Lwt.return_unit)
+      else
+        Nanomsg_lwt.recv_string s >>= fun m ->
+        (assert_equal msgs.(n) m; inner (succ n))
+    in
+    inner 0
+  in
+  let sender addr =
+    let s = socket Push in
+    let _ = connect s addr in
+    Lwt_list.iter_s (Nanomsg_lwt.send_string s) @@ Array.to_list msgs >>
+    Lwt_unix.yield () >|= fun () -> close s
+  in
+  Lwt_main.run (sender (`Inproc "rdvpoint") <&> receiver (`Inproc "rdvpoint"))
 
 let suite =
   "Nanomsg">:::
@@ -230,7 +253,8 @@ let suite =
     "reqrep" >:: reqrep_test;
     "pubsub_local" >:: pubsub_local_test;
     "pubsub_local_2subs" >:: pubsub_local_2subs_test;
-    "tcp_pubsub_test" >:: tcp_pubsub_test;
+    "tcp_pubsub" >:: tcp_pubsub_test;
+    "pipeline_local" >:: pipeline_local_test;
   ]
 
 let () =
