@@ -16,7 +16,12 @@ license: "WTFPL"
 
 build: [
   ["ocaml" "pkg/build.ml" "native=true" "native-dynlink=true"
-   "lwt=%{lwt:installed}%" "ounit=%{ounit:installed}%"]
+   "lwt=%{lwt:installed}%" "ounit=false"]
+]
+
+build-test: [
+  ["ocaml" "pkg/build.ml" "native=true" "native-dynlink=true"
+   "lwt=%{lwt:installed}%" "ounit=true"]
 ]
 
 depends: [
@@ -26,8 +31,9 @@ depends: [
   "containers"
   "ipaddr"
   "ppx_deriving"
+  "ounit" {test}
 ]
 
-depopts: [ "lwt" "ounit" ]
+depopts: [ "lwt" ]
 
 available: [ocaml-version >= "4.02.0"]
