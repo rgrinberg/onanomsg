@@ -19,7 +19,7 @@ opam pin add .
 
 ## Examples
 
-See the `examples` directory.
+See `lib_test/suite.ml`
 
 ## Overview
 
@@ -28,7 +28,6 @@ likely to change in the future.
 
 ## TODO
 
-- Set/Get socket type specific options
 - Add support for devices
 
 ## License
