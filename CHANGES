@@ -1,0 +1,11 @@
+1.0 (2015-01-12):
+
+* Rewritten most of the bindings.
+* Polling support via Lwt.
+* Build system is now topkg.
+* Better handling of addresses through a polymorphic variant.
+* Added an oUnit test suite.
+
+0.1 (2013-11-12):
+
+* First released version.
