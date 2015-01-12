@@ -1,149 +1,340 @@
-open Ctypes
-open Foreign
+open Nanomsg_ctypes
+open Nanomsg_utils
 
-let af_sp                = 1
-let af_sp_raw            = 2
+exception Error = Nanomsg_utils.Error
 
-let nn_sockaddr_max      = 128
-let nn_sol_socket        = 0
+type socket = int
+type domain = AF_SP [@value 1] | AF_SP_RAW [@@deriving enum]
+type proto =
+  | Pair [@value 16]
+  | Pub [@value 32]
+  | Sub [@value 33]
+  | Req [@value 48]
+  | Rep [@value 49]
+  | Push [@value 80]
+  | Pull [@value 81]
+  | Surveyor [@value 96]
+  | Respondant [@value 97]
+  | Bus [@value 112]
+      [@@deriving enum]
 
-(* socket options *)
-let nn_linger            = 1
-let nn_sndbuf            = 2
-let nn_rcvbuf            = 3
-let nn_sndtimeo          = 4
-let nn_rcvtimeo          = 5
-let nn_reconnect_ivl     = 6
-let nn_reconnect_ivl_max = 7
-let nn_sndprio           = 8
-let nn_sndfd             = 10
-let nn_rcvfd             = 11
-let nn_domain            = 12
-let nn_protocol          = 13
-let nn_ipv4only          = 14
-(* send/recv options *)
-let nn_dontwait          = 1
+module Addr = struct
+  module V4 = struct
+    include Ipaddr.V4
+    let pp = pp_hum
+  end
 
-let nn_hausnumero        = 156384712
-let enotsup              = (nn_hausnumero + 1)
-let eprotonosupport      = (nn_hausnumero + 2)
-let enobufs              = (nn_hausnumero + 3)
-let enetdown             = (nn_hausnumero + 4)
-let eaddrinuse           = (nn_hausnumero + 5)
-let eaddrnotavail        = (nn_hausnumero + 6)
-let econnrefused         = (nn_hausnumero + 7)
-let einprogress          = (nn_hausnumero + 8)
-let enotsock             = (nn_hausnumero + 9)
-let eafnosupport         = (nn_hausnumero + 10)
-let eproto               = (nn_hausnumero + 11)
-let eagain               = (nn_hausnumero + 12)
-let ebadf                = (nn_hausnumero + 13)
-let einval               = (nn_hausnumero + 14)
-let emfile               = (nn_hausnumero + 15)
-let efault               = (nn_hausnumero + 16)
-let eaccess              = (nn_hausnumero + 17)
-let enetreset            = (nn_hausnumero + 18)
-let enetunreach          = (nn_hausnumero + 19)
-let ehostunreach         = (nn_hausnumero + 20)
-let enotconn             = (nn_hausnumero + 21)
-let emsgsize             = (nn_hausnumero + 22)
-let etimedout            = (nn_hausnumero + 23)
-let econnaborted         = (nn_hausnumero + 24)
-let econnreset           = (nn_hausnumero + 25)
-let enoprotoopt          = (nn_hausnumero + 26)
-let eisconn              = (nn_hausnumero + 27)
-(* native error codes *)
-let eterm                = (nn_hausnumero + 53)
-let efsm                 = (nn_hausnumero + 54)
+  module V6 = struct
+    include Ipaddr.V6
+    let pp = pp_hum
+  end
 
-let nn_msg = Unsigned.Size_t.of_int (-1)
+  type bind = [
+    | `All
+    | `V4 of V4.t
+    | `V6 of V6.t
+    | `Iface of string ]
+      [@@deriving show]
 
-type nn_iovec
-let nn_iovec : nn_iovec structure typ = structure "nn_iovec"
-let iov_base = field nn_iovec "iov_base" (ptr void)
-let iov_len  = field nn_iovec "iov_len" size_t
-let () = seal nn_iovec
+  type connect =
+    ([`V4 of V4.t | `V6 of V6.t | `Dns of string] *
+     [`V4 of V4.t | `V6 of V6.t | `Iface of string] option)
+      [@@deriving show]
 
-type nn_msghdr
-let nn_msghdr : nn_msghdr structure typ = structure "nn_msghdr"
-let msg_iov        = field nn_msghdr "msg_iov" (ptr nn_iovec)
-let msg_iovlen     = field nn_msghdr "msg_iovlen" int
-let msg_control    = field nn_msghdr "msg_control" (ptr void)
-let msg_controllen = field nn_msghdr "msg_controllen" size_t
-let () = seal nn_msghdr
+  type 'a t = [
+    | `Inproc of string
+    | `Ipc of string
+    | `Tcp of 'a * int
+  ] [@@deriving show]
 
-type nn_cmsghdr
-let nn_cmsghdr : nn_cmsghdr structure typ = structure "nn_cmsghdr"
-let cmsg_len   = field nn_cmsghdr "cmsg_len" size_t
-let cmsg_level = field nn_cmsghdr "cmsg_level" int
-let cmsg_type  = field nn_cmsghdr "cmsg_type" int
-let () = seal nn_cmsghdr
+  let bind_iface_of_string = function
+    | "*" -> `All
+    | s when String.contains s ':' -> `V6 (Ipaddr.V6.of_string_exn s)
+    | s -> try `V4 (Ipaddr.V4.of_string_exn s) with _ -> `Iface s
 
+  let connect_iface_of_string = function
+    | s when String.contains s ':' -> `V6 (Ipaddr.V6.of_string_exn s)
+    | s -> try `V4 (Ipaddr.V4.of_string_exn s) with _ -> `Iface s
 
-module Pair = struct
-  let nn_proto_pair = 1
-  let nn_pair       = nn_proto_pair * 16 + 0
+  let iface_to_string = function
+    | `All -> "*"
+    | `V4 v4 -> Ipaddr.V4.to_string v4
+    | `V6 v6 -> Ipaddr.V6.to_string v6
+    | `Iface ifname -> ifname
+
+  let addr_of_string = function
+    | s when String.contains s ':' -> `V6 (Ipaddr.V6.of_string_exn s)
+    | s -> try `V4 (Ipaddr.V4.of_string_exn s) with _ -> `Dns s
+
+  let addr_to_string = function
+    | `V4 v4 -> Ipaddr.V4.to_string v4
+    | `V6 v6 -> Ipaddr.V6.to_string v6
+    | `Dns n -> n
+
+  let bind_to_string = function
+    | `Inproc a -> "inproc://" ^ a
+    | `Ipc a -> "ipc://" ^ a
+    | `Tcp (bind, port) ->
+      let interface = iface_to_string bind in
+      "tcp://" ^ interface ^ ":" ^ string_of_int port
+
+  let connect_to_string = function
+    | `Inproc a -> "inproc://" ^ a
+    | `Ipc a -> "ipc://" ^ a
+    | `Tcp ((addr, iface), port) ->
+      let iface = CCOpt.map iface_to_string iface in
+      let addr = addr_to_string addr in
+      "tcp://" ^
+      (match iface with Some i -> i ^ ";" | None -> "")
+      ^ addr ^ ":" ^ string_of_int port
+
+  let of_string s =
+    let len = String.length s in
+    let addr_start = String.index s '/' + 2 in
+    let addr_len = len - addr_start in
+    match String.sub s 0 (addr_start - 3) with
+    | "inproc" -> `Inproc (String.sub s addr_start addr_len)
+    | "ipc" -> `Ipc (String.sub s addr_start addr_len)
+    | "tcp" ->
+      let port_start = String.rindex s ':' + 1 in
+      let port = String.sub s port_start (len - port_start) in
+      let port, port_len = int_of_string port, String.length port in
+      let addr = String.sub s addr_start (addr_len - port_len - 1) in
+      `Tcp (addr, port)
+    | _ -> invalid_arg "addr_of_string"
+
+  let bind_of_string s = match of_string s with
+    | `Inproc _ | `Ipc _ as s -> s
+    | `Tcp (addr, port) ->
+      let iface = bind_iface_of_string addr in
+      `Tcp (iface, port)
+
+  let connect_of_string s = match of_string s with
+    | `Inproc _ | `Ipc _ as s -> s
+    | `Tcp (iface_addr, port) ->
+      if String.contains iface_addr ';' then
+        let len = String.length iface_addr in
+        let addr_start = String.index iface_addr ';' + 1 in
+        let addr = String.sub iface_addr addr_start (len - addr_start) in
+        let iface = String.(sub iface_addr 0 @@ addr_start - 1) in
+        `Tcp ((addr_of_string addr, Some (connect_iface_of_string iface)), port)
+      else
+        `Tcp ((addr_of_string iface_addr, None), port)
 end
 
-module Pub_sub = struct
-  let nn_proto_pubsub    = 2
-  let nn_pub             = nn_proto_pubsub * 16 + 0
-  let nn_sub             = nn_proto_pubsub * 16 + 1
-  let nn_sub_subscribe   = 1
-  let nn_sub_unsubscribe = 2
-end
 
-module Req_rep = struct
-  let nn_proto_reqrep   = 3
-  let nn_req            = nn_proto_reqrep * 16 + 0
-  let nn_rep            = nn_proto_reqrep * 16 + 1
-  let nn_req_resend_ivl = 1
-end
+type eid = int
 
-module Pipeline = struct
-  let nn_proto_pipeline = 5
-  let nn_push           = nn_proto_pipeline * 16 + 0
-  let nn_pull           = nn_proto_pipeline * 16 + 1
-end
+let socket ?(domain=AF_SP) proto =
+  raise_negative (fun () ->
+      nn_socket (domain_to_enum domain) (proto_to_enum proto))
+
+let bind sock addr =
+  raise_negative (fun () -> nn_bind sock @@ Addr.bind_to_string addr)
+
+let connect sock addr =
+  raise_negative (fun () -> nn_connect sock @@ Addr.connect_to_string addr)
+
+let shutdown s e =
+  ignore @@ raise_negative (fun () -> nn_shutdown s e)
+
+let close sock =
+  ignore @@ raise_notequal 0 (fun () -> nn_close sock)
+
+(* getsockopt *)
+
+let getsockopt ~typ ~init sock level opt =
+  let open Ctypes in
+  let p = allocate typ init in
+  let size = allocate size_t @@ size_of_int (sizeof typ) in
+  ignore @@ raise_negative (fun () ->
+      nn_getsockopt sock
+        Symbol.(value_of_name_exn level)
+        Symbol.(value_of_name_exn opt)
+        (to_voidp p) size
+    ); !@ p
+
+let getsockopt_int = getsockopt ~typ:Ctypes.int ~init:0
+
+let domain sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_DOMAIN" |>
+  domain_of_enum |> Opt.run
+
+let proto sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_PROTOCOL" |>
+  proto_of_enum |> Opt.run
+
+let get_linger sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_LINGER" |> function
+  | n when n < 0 -> `Inf
+  | n -> `Ms n
+
+let get_send_bufsize sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_SNDBUF"
+
+let get_recv_bufsize sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_RCVBUF"
+
+let get_send_timeout sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_SNDTIMEO" |> function
+  | n when n < 0 -> `Inf
+  | n -> `Ms n
+
+let get_recv_timeout sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_RCVTIMEO" |> function
+  | n when n < 0 -> `Inf
+  | n -> `Ms n
+
+let get_reconnect_ival sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_RECONNECT_IVL"
+
+let get_reconnect_ival_max sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_RECONNECT_IVL_MAX"
+
+let get_send_prio sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_SNDPRIO"
+
+let get_recv_prio sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_RCVPRIO"
+
+let get_ipv4only sock =
+  getsockopt_int sock "NN_SOL_SOCKET" "NN_IPV4ONLY" |> bool_of_int
+
+let send_fd sock =
+  let fd = getsockopt_int sock "NN_SOL_SOCKET" "NN_SNDFD" in
+  (Obj.magic fd : Unix.file_descr)
+
+let recv_fd sock =
+  let fd = getsockopt_int sock "NN_SOL_SOCKET" "NN_RCVFD" in
+  (Obj.magic fd : Unix.file_descr)
+
+let send_bigstring_buf ?(block=true) sock buf pos len =
+  if pos < 0 || len < 0 || pos + len > CCBigstring.size buf
+  then invalid_arg "bounds";
+  let nn_buf = nn_allocmsg (size_of_int len) 0 in
+  match nn_buf with
+  | None -> throw ()
+  | Some nn_buf ->
+    let nn_buf_p = Ctypes.(allocate (ptr void) nn_buf) in
+    let ba = Ctypes.(bigarray_of_ptr array1 len
+                       Bigarray.char @@ from_voidp char nn_buf) in
+    CCBigstring.blit buf pos ba 0 len;
+    ignore @@ raise_notequal len
+      (fun () -> nn_send sock nn_buf_p nn_msg (int_of_bool block))
+
+let send_bigstring ?(block=true) sock buf =
+  send_bigstring_buf ~block sock buf 0 @@ CCBigstring.size buf
+
+let send_bytes_buf ?(block=true) sock buf pos len =
+  if pos < 0 || len < 0 || pos + len > Bytes.length buf
+  then invalid_arg "bounds";
+  let nn_buf = nn_allocmsg (size_of_int len) 0 in
+  match nn_buf with
+  | None -> throw ()
+  | Some nn_buf ->
+    let nn_buf_p = Ctypes.(allocate (ptr void) nn_buf) in
+    let ba = Ctypes.(bigarray_of_ptr array1 len
+                       Bigarray.char @@ from_voidp char nn_buf) in
+    CCBigstring.blit_of_bytes buf pos ba 0 len;
+    ignore @@ raise_notequal len
+      (fun () -> nn_send sock nn_buf_p nn_msg (int_of_bool block))
+
+let send_bytes ?(block=true) sock b =
+  send_bytes_buf ~block sock b 0 @@ Bytes.length b
+
+let send_string_buf ?(block=true) sock s pos len =
+  send_bytes_buf ~block sock (Bytes.unsafe_of_string s) pos len
+
+let send_string ?(block=true) sock s =
+  send_bytes_buf ~block sock (Bytes.unsafe_of_string s) 0 (String.length s)
+
+let recv ?(block=true) sock f =
+  let open Ctypes in
+  let ba_start_p = allocate (ptr void) null in
+  let nb_recv =
+    raise_negative
+      (fun () -> nn_recv sock ba_start_p nn_msg (int_of_bool block)) in
+  let ba_start = !@ ba_start_p in
+  if nb_recv < 0 then throw ()
+  else
+    let ba = bigarray_of_ptr array1 nb_recv
+        Bigarray.char (from_voidp char ba_start) in
+    let res = f ba in
+    let (_:int) = nn_freemsg ba_start in
+    res
+
+let recv_bytes_buf ?(block=true) sock buf pos =
+  recv ~block sock
+    (fun ba ->
+       let len = CCBigstring.size ba in
+       CCBigstring.(blit_to_bytes ba 0 buf pos len);
+       len
+    )
+
+let recv_bytes ?(block=true) sock =
+  recv ~block sock (fun ba ->
+      let len = CCBigstring.size ba in
+      let buf = Bytes.create len in
+      CCBigstring.blit_to_bytes ba 0 buf 0 len;
+      buf)
+
+let recv_string ?(block=true) sock =
+  recv_bytes ~block sock |> Bytes.unsafe_to_string
+
+let setsockopt sock level opt optval optvalsize =
+  let open Ctypes in
+  ignore @@ raise_negative (fun () ->
+      nn_setsockopt sock
+        (Symbol.value_of_name_exn level)
+        (Symbol.value_of_name_exn opt)
+        (to_voidp optval)
+        (size_of_int optvalsize)
+    )
+
+let setsockopt_int sock level opt v =
+  let open Ctypes in
+  setsockopt sock level opt (allocate int v) (sizeof int)
 
 
-module Survey = struct
-  let nn_proto_survey      = 6
-  let nn_surveyor          = nn_proto_survey * 16 + 0
-  let nn_respondent        = nn_proto_survey * 16 + 1
-  let nn_surveyor_deadline = 1
-end
+let subscribe sock topic =
+  setsockopt sock "NN_SUB" "NN_SUB_SUBSCRIBE"
+    Ctypes.(allocate string topic) (String.length topic)
 
-module Bus = struct
-  let nn_proto_bus = 7
-  let nn_bus       = nn_proto_bus * 16 + 0
-end
+let unsubscribe sock topic =
+  setsockopt sock "NN_SUB" "NN_SUB_UNSUBSCRIBE"
+    Ctypes.(allocate string topic) (String.length topic)
 
-let from = Dl.(dlopen ~filename:"libnanomsg.so" ~flags:[RTLD_NOW])
 
-let nn_errno      = foreign ~from "nn_errno" (void @-> returning int)
-let nn_strerror   = foreign ~from "nn_strerror" (int @-> returning string)
-let nn_symbol     = foreign ~from "nn_symbol" (int @-> ptr int @-> returning string)
-let nn_term       = foreign ~from "nn_term" (void @-> returning void)
-let nn_allocmsg   = foreign ~from "nn_allocmsg" (size_t @-> int @-> returning (ptr void))
-let nn_freemsg    = foreign ~from "nn_freemsg" (ptr void @-> returning int)
-let nn_socket     = foreign ~from "nn_socket" (int @-> int @-> returning int)
-let nn_close      = foreign ~from "nn_close" (int @-> returning int)
-let nn_getsockopt = foreign ~from "nn_getsockopt" (int @-> int @-> int @-> (ptr void) @-> (ptr size_t) @-> returning int)
-let nn_bind       = foreign ~from "nn_bind" (int @-> string @-> returning int)
-let nn_connect    = foreign ~from "nn_connect" (int @-> string @-> returning int)
-let nn_shutdown   = foreign ~from "nn_shutdown" (int @-> int @-> returning int)
-let nn_send       = foreign ~from "nn_send" (int @-> string @-> size_t @-> int @-> returning int)
+let set_linger sock duration =
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_LINGER" (int_of_duration duration)
 
-let nn_recv       = foreign ~from "nn_recv"
-    (int @-> ptr (string_opt) @-> size_t @-> int @-> returning int)
+let set_send_bufsize sock size =
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_SNDBUF" size
 
-let nn_sendmsg    = foreign ~from "nn_sendmsg" (int @-> ptr nn_msghdr @-> int @-> returning int)
-let nn_recvmsg    = foreign ~from "nn_recvmsg" (int @-> ptr nn_msghdr @-> int @-> returning int)
-let nn_device     = foreign ~from "nn_device" (int @-> int @-> returning int)
+let set_recv_bufsize sock size =
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_RCVBUF" size
 
-let nn_setsockopt = foreign ~from "nn_setsockopt" 
-    (int @-> int @-> int @-> (ptr void) @-> size_t @-> returning int)
+let set_send_timeout sock duration =
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_SNDTIMEO" (int_of_duration duration)
 
-let nn_recv_str = foreign ~from "nn_recv"
-    (int @-> string @-> size_t @-> int @-> returning int)
+let set_recv_timeout sock duration =
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_RCVTIMEO" (int_of_duration duration)
+
+let set_reconnect_ival sock ival =
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_RECONNECT_IVL" ival
+
+let set_reconnect_ival_max sock ival =
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_RECONNECT_IVL_MAX" ival
+
+let set_send_prio sock priority =
+  if priority < 1 || priority > 16 then invalid_arg "set_send_priority";
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_SNDPRIO" priority
+
+let set_recv_prio sock priority =
+  if priority < 1 || priority > 16 then invalid_arg "set_recv_priority";
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_RCVPRIO" priority
+
+let set_ipv4_only sock b =
+  setsockopt_int sock "NN_SOL_SOCKET" "NN_IPV4ONLY" (int_of_bool b)
+
+let term = nn_term

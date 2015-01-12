@@ -1,22 +1,24 @@
-default:
-	ocp-build
+PKG=nanomsg
+PREFIX=`opam config var prefix`
+BUILDOPTS=native=true native-dynlink=true lwt=true ounit=true
 
-install:
-	ocp-build install
+all: build
 
-uninstall:
-	ocp-build uninstall
+test: suite.native
+	./suite.native -shards 1 -runner sequential
 
-oasis_gtfo:
-	rm -f setup.ml
-	rm -f setbup.data
-	rm -f -rf _build
-	rm -f myocamlbuild.ml
-	rm -f tags
-	rm -f lib/*.mllib
-	rm -f lib/*.clib
+suite.native: build
 
-symlinks:
-	./symlinks.sh
+build:
+	ocaml pkg/build.ml $(BUILDOPTS)
 
-.PHONY: build test configure clean symlinks
+install: build
+	opam-installer --prefix=$(PREFIX) $(PKG).install
+
+uninstall: $(PKG).install
+	opam-installer -u --prefix=$(PREFIX) $(PKG).install
+
+PHONY: clean
+
+clean:
+	ocamlbuild -clean

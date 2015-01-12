@@ -1,38 +1,25 @@
-# Onanomsg
+# ONanomsg
 
-Ctypes based bindings to nanomsg for OCaml (alpha)
+`ctypes`-based bindings to [nanomsg](https://github.com/250bpm/nanomsg) for OCaml
 
 ## Installation
 
 The dependencies are:
+* cstruct
 * ctypes > 0.2
-* ocp-build
-* nanomsg - [nanomsg](https://github.com/250bpm/nanomsg)
+* ppx_deriving
+* ipaddr
+* [nanomsg](https://github.com/250bpm/nanomsg)
+* (optional) lwt > 2.4.6
+
 
 ```
-make # no errors hopefully
-make install
+opam pin add .
 ```
 
-## Example
+## Examples
 
-```
-let () = 
-  let open Onanomsg.Domain in
-  let open Onanomsg.Socket in
-  let address = "inproc://t2t" in
-  let sub = socket ~domain:Af_sp ~sock_type:sub in
-  let endpoint = Onanomsg.connect sub ~address in
-  Onanomsg.subscribe sub ~topic:"";
-  let packet = "foo bar baz" in
-  let pub = socket ~domain:Af_sp ~sock_type:pub in
-  let endpoint = Onanomsg.bind pub ~address in
-  Onanomsg.send pub packet;
-  let recv_msg = Onanomsg.recv sub in
-  Printf.printf "Received: %s\n" recv_msg;
-  Onanomsg.close pub;
-  Onanomsg.close sub
-```
+See the `examples` directory.
 
 ## Overview
 
@@ -40,11 +27,10 @@ For now these bindings are as close possible to the C interface but that is
 likely to change in the future.
 
 ## TODO
-- Set socket type specific options
-- Wrap getsockopt
+
+- Set/Get socket type specific options
 - Add support for devices
-- Fix reqrep
 
 ## License
 
-Onanomsg is licensed under the [WTFPL](http://www.wtfpl.net/). See LICENSE.
+ONanomsg is licensed under the [WTFPL](http://www.wtfpl.net/). See LICENSE.

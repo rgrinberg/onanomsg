@@ -1,8 +1,0 @@
-version = "0.1"
-authors = [ "Rudi, Grinberg <rudi.grinberg@gmail.com>" ]
-license = [ "WTFPLv2" ]
-
-begin library "onanomsg"
-  files = ["nanomsg.ml" "onanomsg.mli" "onanomsg.ml"]
-  requires = ["ctypes" "ctypes.foreign" "threads"]
-end
