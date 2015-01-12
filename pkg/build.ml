@@ -10,8 +10,6 @@ let () =
     Pkg.lib "pkg/META";
     Pkg.lib ~exts:Exts.module_library "lib/nanomsg";
     Pkg.lib ~cond:lwt ~exts:Exts.module_library "lib/nanomsg_lwt";
-    Pkg.bin ~cond:ounit ~auto:true "lib_test/suite";
 
-    Pkg.bin ~auto:true "examples/pipeline";
-    Pkg.bin ~auto:true "examples/reqrep";
+    Pkg.bin ~cond:ounit ~auto:true "lib_test/suite";
 ]
