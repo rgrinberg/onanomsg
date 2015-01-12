@@ -1,6 +1,6 @@
 PKG=nanomsg
 PREFIX=`opam config var prefix`
-BUILDOPTS=native=true native-dynlink=true lwt=true
+BUILDOPTS=native=true native-dynlink=true lwt=true ounit=true
 
 all: build
 
@@ -11,7 +11,6 @@ suite.native: build
 
 build:
 	ocaml pkg/build.ml $(BUILDOPTS)
-	./suite.native -shards 1 -runner sequential
 
 install: build
 	opam-installer --prefix=$(PREFIX) $(PKG).install

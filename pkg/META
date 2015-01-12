@@ -1,4 +1,4 @@
-version = "0.2"
+version = "1.0"
 description = "Bindings to nanomsg"
 requires = "ctypes.foreign ipaddr ppx_deriving.std containers containers.bigarray"
 archive(byte) = "nanomsg.cma"
@@ -7,7 +7,7 @@ archive(native) = "nanomsg.cmxa"
 archive(native, plugin) = "nanomsg.cmxs"
 exists_if = "nanomsg.cma"
 package "lwt" (
- version = "0.2"
+ version = "1.0"
  description = "Bindings to nanomsg"
  requires = "nanomsg lwt.unix"
  archive(byte) = "nanomsg_lwt.cma"
@@ -15,5 +15,4 @@ package "lwt" (
  archive(native) = "nanomsg_lwt.cmxa"
  archive(native, plugin) = "nanomsg_lwt.cmxs"
  exists_if = "nanomsg_lwt.cma"
-
 )

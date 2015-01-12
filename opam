@@ -1,9 +1,10 @@
 opam-version: "1.2"
 name: "nanomsg"
-version: "dev"
-maintainer: "rudi.grinberg@gmail.com"
+version: "1.0"
+maintainer: "vb@luminar.eu.org"
 build: [
-  ["ocaml" "pkg/build.ml" "native=true" "native-dynlink=true" "lwt=%{lwt:installed}%"]
+  ["ocaml" "pkg/build.ml" "native=true" "native-dynlink=true"
+   "lwt=%{lwt:installed}%" "ounit=%{ounit:installed}%"]
 ]
 depends: [
   "conf-nanomsg"
@@ -13,4 +14,4 @@ depends: [
   "ipaddr"
   "ppx_deriving"
 ]
-depopts: [ "lwt" ]
+depopts: [ "lwt" "ounit" ]
