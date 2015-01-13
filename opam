@@ -6,7 +6,7 @@ version: "1.0"
 maintainer: "Vincent Bernardoff <vb@luminar.eu.org>"
 authors: [
   "Vincent Bernardoff <vb@luminar.eu.org>"
-  "Rudi Grinberg <rgrinberg@gmail.com>"
+  "Rudi Grinberg <rudi.grinberg@gmail.com>"
 ]
 
 homepage: "http://github.com/rgringberg/onanomsg"
