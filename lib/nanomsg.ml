@@ -1,4 +1,3 @@
-open Nanomsg_ctypes
 open Nanomsg_utils
 
 exception Error = Nanomsg_utils.Error
@@ -127,28 +126,28 @@ type eid = int
 
 let socket ?(domain=AF_SP) proto =
   raise_negative (fun () ->
-      nn_socket (domain_to_enum domain) (proto_to_enum proto))
+      C.nn_socket (domain_to_enum domain) (proto_to_enum proto))
 
 let bind sock addr =
-  raise_negative (fun () -> nn_bind sock @@ Addr.bind_to_string addr)
+  raise_negative (fun () -> C.nn_bind sock @@ Addr.bind_to_string addr)
 
 let connect sock addr =
-  raise_negative (fun () -> nn_connect sock @@ Addr.connect_to_string addr)
+  raise_negative (fun () -> C.nn_connect sock @@ Addr.connect_to_string addr)
 
 let shutdown s e =
-  ignore @@ raise_negative (fun () -> nn_shutdown s e)
+  ignore @@ raise_negative (fun () -> C.nn_shutdown s e)
 
 let close sock =
-  ignore @@ raise_notequal 0 (fun () -> nn_close sock)
+  ignore @@ raise_notequal 0 (fun () -> C.nn_close sock)
 
 (* getsockopt *)
 
 let getsockopt ~typ ~init sock level opt =
   let open Ctypes in
   let p = allocate typ init in
-  let size = allocate size_t @@ size_of_int (sizeof typ) in
+  let size = allocate size_t @@ Unsigned.Size_t.of_int (sizeof typ) in
   ignore @@ raise_negative (fun () ->
-      nn_getsockopt sock
+      C.nn_getsockopt sock
         Symbol.(value_of_name_exn level)
         Symbol.(value_of_name_exn opt)
         (to_voidp p) size
@@ -158,11 +157,11 @@ let getsockopt_int = getsockopt ~typ:Ctypes.int ~init:0
 
 let domain sock =
   getsockopt_int sock "NN_SOL_SOCKET" "NN_DOMAIN" |>
-  domain_of_enum |> Opt.run
+  domain_of_enum |> CCOpt.get_exn
 
 let proto sock =
   getsockopt_int sock "NN_SOL_SOCKET" "NN_PROTOCOL" |>
-  proto_of_enum |> Opt.run
+  proto_of_enum |> CCOpt.get_exn
 
 let get_linger sock =
   getsockopt_int sock "NN_SOL_SOCKET" "NN_LINGER" |> function
@@ -211,7 +210,7 @@ let recv_fd sock =
 let send_bigstring_buf ?(block=true) sock buf pos len =
   if pos < 0 || len < 0 || pos + len > CCBigstring.size buf
   then invalid_arg "bounds";
-  let nn_buf = nn_allocmsg (size_of_int len) 0 in
+  let nn_buf = C.nn_allocmsg (Unsigned.Size_t.of_int len) 0 in
   match nn_buf with
   | None -> throw ()
   | Some nn_buf ->
@@ -220,7 +219,8 @@ let send_bigstring_buf ?(block=true) sock buf pos len =
                        Bigarray.char @@ from_voidp char nn_buf) in
     CCBigstring.blit buf pos ba 0 len;
     ignore @@ raise_notequal len
-      (fun () -> nn_send sock nn_buf_p nn_msg (int_of_bool block))
+      (fun () -> C.nn_send sock nn_buf_p
+          (Unsigned.Size_t.of_int (-1)) (int_of_bool block))
 
 let send_bigstring ?(block=true) sock buf =
   send_bigstring_buf ~block sock buf 0 @@ CCBigstring.size buf
@@ -228,7 +228,7 @@ let send_bigstring ?(block=true) sock buf =
 let send_bytes_buf ?(block=true) sock buf pos len =
   if pos < 0 || len < 0 || pos + len > Bytes.length buf
   then invalid_arg "bounds";
-  let nn_buf = nn_allocmsg (size_of_int len) 0 in
+  let nn_buf = C.nn_allocmsg (Unsigned.Size_t.of_int len) 0 in
   match nn_buf with
   | None -> throw ()
   | Some nn_buf ->
@@ -237,7 +237,8 @@ let send_bytes_buf ?(block=true) sock buf pos len =
                        Bigarray.char @@ from_voidp char nn_buf) in
     CCBigstring.blit_of_bytes buf pos ba 0 len;
     ignore @@ raise_notequal len
-      (fun () -> nn_send sock nn_buf_p nn_msg (int_of_bool block))
+      (fun () -> C.nn_send sock nn_buf_p
+          (Unsigned.Size_t.of_int (-1)) (int_of_bool block))
 
 let send_bytes ?(block=true) sock b =
   send_bytes_buf ~block sock b 0 @@ Bytes.length b
@@ -253,14 +254,15 @@ let recv ?(block=true) sock f =
   let ba_start_p = allocate (ptr void) null in
   let nb_recv =
     raise_negative
-      (fun () -> nn_recv sock ba_start_p nn_msg (int_of_bool block)) in
+      (fun () -> C.nn_recv sock ba_start_p
+          (Unsigned.Size_t.of_int (-1)) (int_of_bool block)) in
   let ba_start = !@ ba_start_p in
   if nb_recv < 0 then throw ()
   else
     let ba = bigarray_of_ptr array1 nb_recv
         Bigarray.char (from_voidp char ba_start) in
     let res = f ba in
-    let (_:int) = nn_freemsg ba_start in
+    let (_:int) = C.nn_freemsg ba_start in
     res
 
 let recv_bytes_buf ?(block=true) sock buf pos =
@@ -284,11 +286,11 @@ let recv_string ?(block=true) sock =
 let setsockopt sock level opt optval optvalsize =
   let open Ctypes in
   ignore @@ raise_negative (fun () ->
-      nn_setsockopt sock
+      C.nn_setsockopt sock
         (Symbol.value_of_name_exn level)
         (Symbol.value_of_name_exn opt)
         (to_voidp optval)
-        (size_of_int optvalsize)
+        (Unsigned.Size_t.of_int optvalsize)
     )
 
 let setsockopt_int sock level opt v =
@@ -337,4 +339,4 @@ let set_recv_prio sock priority =
 let set_ipv4_only sock b =
   setsockopt_int sock "NN_SOL_SOCKET" "NN_IPV4ONLY" (int_of_bool b)
 
-let term = nn_term
+let term = C.nn_term

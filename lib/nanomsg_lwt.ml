@@ -1,12 +1,11 @@
 open Lwt.Infix
 
-open Nanomsg_ctypes
 open Nanomsg_utils
 open Nanomsg
 
 let throw () =
-  let code = nn_errno () in
-  let err_string = nn_strerror code in
+  let code = C.nn_errno () in
+  let err_string = C.nn_strerror code in
   let err_value =
     if code > 156384712
     then Symbol.errvalue_of_errno_exn code
@@ -27,7 +26,7 @@ let raise_notequal sock io_event v f = raise_if sock io_event (fun x -> x <> v) 
 let send_bigstring_buf sock buf pos len =
   if pos < 0 || len < 0 || pos + len > CCBigstring.size buf
   then invalid_arg "bounds";
-  let nn_buf = nn_allocmsg (size_of_int len) 0 in
+  let nn_buf = C.nn_allocmsg (Unsigned.Size_t.of_int len) 0 in
   match nn_buf with
   | None -> throw ()
   | Some nn_buf ->
@@ -36,7 +35,8 @@ let send_bigstring_buf sock buf pos len =
                        Bigarray.char @@ from_voidp char nn_buf) in
     CCBigstring.blit buf pos ba 0 len;
     raise_notequal sock Lwt_unix.Write len
-      (fun () -> nn_send (Obj.magic sock : int) nn_buf_p nn_msg
+      (fun () -> C.nn_send (Obj.magic sock : int)
+          nn_buf_p (Unsigned.Size_t.of_int (-1))
           Symbol.(value_of_name_exn "NN_DONTWAIT")) >|= fun nb_written ->
     ignore nb_written
 
@@ -46,7 +46,7 @@ let send_bigstring sock buf =
 let send_bytes_buf sock buf pos len =
   if pos < 0 || len < 0 || pos + len > Bytes.length buf
   then invalid_arg "bounds";
-  let nn_buf = nn_allocmsg (size_of_int len) 0 in
+  let nn_buf = C.nn_allocmsg (Unsigned.Size_t.of_int len) 0 in
   match nn_buf with
   | None -> throw ()
   | Some nn_buf ->
@@ -55,7 +55,8 @@ let send_bytes_buf sock buf pos len =
                        Bigarray.char @@ from_voidp char nn_buf) in
     CCBigstring.blit_of_bytes buf pos ba 0 len;
     raise_notequal sock Lwt_unix.Write len
-      (fun () -> nn_send (Obj.magic sock : int)  nn_buf_p nn_msg
+      (fun () -> C.nn_send (Obj.magic sock : int)
+          nn_buf_p (Unsigned.Size_t.of_int (-1))
           Symbol.(value_of_name_exn "NN_DONTWAIT")) >|= fun nb_written ->
     ignore nb_written
 
@@ -73,13 +74,14 @@ let recv sock f =
   let open Ctypes in
   let ba_start_p = allocate (ptr void) null in
   raise_negative sock Lwt_unix.Read
-    (fun () -> nn_recv (Obj.magic sock : int) ba_start_p nn_msg
+    (fun () -> C.nn_recv (Obj.magic sock : int)
+        ba_start_p (Unsigned.Size_t.of_int (-1))
         Symbol.(value_of_name_exn "NN_DONTWAIT")) >>= fun nb_recv ->
   let ba_start = !@ ba_start_p in
   let ba = bigarray_of_ptr array1 nb_recv
       Bigarray.char (from_voidp char ba_start) in
   f ba >|= fun res ->
-  let (_:int) = nn_freemsg ba_start in
+  let (_:int) = C.nn_freemsg ba_start in
   res
 
 let recv_bytes_buf sock buf pos =
