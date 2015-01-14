@@ -24,13 +24,13 @@ Library "nanomsg"
   BuildTools:       nanomsg_bindgen
 
 Library "nanomsg_lwt"
-  Path:		    lib
-  Modules: 	    Nanomsg_lwt
-  FindlibName:	    lwt
-  FindlibParent:    nanomsg
-  Build$:	    flag(lwt)
-  Install$:	    flag(lwt)
-  BuildDepends:     nanomsg, lwt.unix
+  Path:          lib
+  Modules:       Nanomsg_lwt
+  FindlibName:   lwt
+  FindlibParent: nanomsg
+  Build$:        flag(lwt)
+  Install$:      flag(lwt)
+  BuildDepends:  nanomsg, lwt.unix
 
 Executable "nanomsg_bindgen"
   Install:          false
