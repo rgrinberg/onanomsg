@@ -129,13 +129,13 @@ let pair_test ctx =
   let _ = connect peer2 addr in
   let rec inner () =
     Lwt_list.iter_s (fun msg ->
-        NB.send_string peer1 msg >>
-        let%lwt recv_msg = NB.recv_string peer2 in
+        NB.send_string peer1 msg >>= fun () ->
+        NB.recv_string peer2 >>= fun recv_msg ->
         assert_equal msg recv_msg; Lwt.return_unit
-      ) msgs >>
+      ) msgs >>= fun () ->
     Lwt_list.iter_s (fun msg ->
-        NB.send_string peer2 msg >>
-        let%lwt recv_msg = NB.recv_string peer1 in
+        NB.send_string peer2 msg >>= fun () ->
+        NB.recv_string peer1 >>= fun recv_msg ->
         assert_equal msg recv_msg; Lwt.return_unit
       ) msgs >|= fun () ->
     close peer1;
@@ -236,7 +236,7 @@ let pipeline_local_test ctx =
   let sender addr =
     let s = socket Push in
     let _ = connect s addr in
-    Lwt_list.iter_s (Nanomsg_lwt.send_string s) @@ Array.to_list msgs >>
+    Lwt_list.iter_s (Nanomsg_lwt.send_string s) @@ Array.to_list msgs >>= fun () ->
     Lwt_unix.yield () >|= fun () -> close s
   in
   Lwt_main.run (sender (`Inproc "rdvpoint") <&> receiver (`Inproc "rdvpoint"))

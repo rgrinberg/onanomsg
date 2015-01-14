@@ -16,3 +16,5 @@ lib/META
 **/*.mllib
 **/*.mldylib
 setup.ml
+Makefile
+_tags

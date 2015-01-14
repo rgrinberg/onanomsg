@@ -43,7 +43,7 @@ Executable "suite"
   Install:          false
   Path:             lib_test
   MainIs:           suite.ml
-  BuildDepends:     oUnit (>= 2.0), nanomsg
+  BuildDepends:     oUnit (>= 2.0), nanomsg.lwt
   CompiledObject:   best
 
 Test "nanomsg"
