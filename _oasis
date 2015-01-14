@@ -47,7 +47,7 @@ Executable "suite"
   CompiledObject:   best
 
 Test "nanomsg"
-  Command:          $suite
+  Command:          $suite -shards 1 -runner sequential
 
 AlphaFeatures: ocamlbuild_more_args
 Document "api"
