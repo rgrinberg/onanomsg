@@ -1,0 +1,66 @@
+OASISFormat  : 0.4
+Name         : nanomsg
+Version      : 1.1
+Synopsis     : nanomsg bindings for OCaml
+Authors      : Vincent Bernardoff, Rudi Grinberg
+License      : WTFPL
+Plugins      : DevFiles (0.4), META (0.4)
+BuildTools   : ocamlbuild
+Maintainers  : Vincent Bernardoff <vb@luminar.eu.org>
+Homepage     : https://github.com/rgrinberg/onanomsg
+
+Flag lwt
+  Description: build the Lwt library
+  Default:     false
+
+Library "nanomsg"
+  Path:             lib
+  Modules:          Nanomsg
+  InternalModules:  Nanomsg_utils, Nanomsg_bindings, Nanomsg_generated
+  CSources:         nanomsg_stubs.c
+  CCLib:            -lnanomsg
+  CCOpt:            -I $pkg_ctypes_stubs
+  BuildDepends:     bytes, ctypes.stubs, containers, containers.bigarray, ipaddr, ppx_deriving.std
+  BuildTools:       nanomsg_bindgen
+
+Library "nanomsg_lwt"
+  Path:		    lib
+  Modules: 	    Nanomsg_lwt
+  FindlibName:	    lwt
+  FindlibParent:    nanomsg
+  Build$:	    flag(lwt)
+  Install$:	    flag(lwt)
+  BuildDepends:     nanomsg, lwt.unix
+
+Executable "nanomsg_bindgen"
+  Install:          false
+  Path:             lib_gen
+  MainIs:           nanomsg_bindgen.ml
+  BuildDepends:     ctypes.stubs
+
+Executable "suite"
+  Build$:           flag(tests)
+  Install:          false
+  Path:             lib_test
+  MainIs:           suite.ml
+  BuildDepends:     oUnit (>= 2.0), nanomsg
+  CompiledObject:   best
+
+Test "nanomsg"
+  Command:          $suite
+
+AlphaFeatures: ocamlbuild_more_args
+Document "api"
+  Type:             ocamlbuild (0.4)
+  BuildTools:       ocamldoc
+  Title:            API reference for Nanomsg
+
+  XOCamlbuildPath:      .
+  XOCamlbuildExtraArgs: "-docflags '-colorize-code -short-functors -charset utf-8'"
+  XOCamlbuildLibraries: nanomsg
+
+SourceRepository "master"
+  Type:             git
+  Location:         https://github.com/rgrinberg/onanomsg.git
+  Branch:           master
+  Browser:          https://github.com/rgrinberg/onanomsg

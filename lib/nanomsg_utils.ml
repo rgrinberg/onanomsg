@@ -1,14 +1,9 @@
-open Nanomsg_ctypes
+open Ctypes
+module C = Nanomsg_bindings.C(Nanomsg_generated)
 
 let int_of_duration = function `Inf -> -1 | `Ms x -> x
 let int_of_bool = function false -> 0 | true -> 1
 let bool_of_int = function 0 -> false | _ -> true
-
-module Opt = struct
-  let run = function
-    | Some v -> v
-    | None -> invalid_arg "Opt.run"
-end
 
 module Ipaddr = struct
   include Ipaddr
@@ -28,8 +23,8 @@ module Symbol = struct
 
   (* This will be run at program start. *)
   let () =
-    let open Ctypes in
     let rec inner i =
+      let open C in
       let sp = make nn_symbol_properties in
       let ret = nn_symbol_info i (addr sp) (sizeof nn_symbol_properties) in
       if ret = 0 then () else
@@ -62,8 +57,8 @@ end
 exception Error of string * string
 
 let throw () =
-  let code = nn_errno () in
-  let err_string = nn_strerror code in
+  let code = C.nn_errno () in
+  let err_string = C.nn_strerror code in
   let err_value =
     if code > 156384712
     then Symbol.errvalue_of_errno_exn code

@@ -15,25 +15,32 @@ dev-repo: "git://github.com/rgrinberg/onanomsg"
 license: "WTFPL"
 
 build: [
-  ["ocaml" "pkg/build.ml" "native=true" "native-dynlink=true"
-   "lwt=%{lwt:installed}%" "ounit=false"]
+  ["oasis" "setup"]
+  ["./configure" "--%{lwt:enable}%-lwt"]
+  [make]
 ]
 
+install: [make "install"]
+
+remove: ["ocamlfind" "remove" "nanomsg"]
+
 build-test: [
-  ["ocaml" "pkg/build.ml" "native=true" "native-dynlink=true"
-   "lwt=%{lwt:installed}%" "ounit=true"]
+  ["oasis" "setup"]
+  ["./configure" "--enable-tests" "--%{lwt:enable}%-lwt"]
+  [make]
 ]
 
 depends: [
   "conf-nanomsg"
   "ocamlfind" {build}
-  "ctypes" {>= "0.2"}
+  "oasis" {build}
+  "ctypes" {>= "0.3"}
   "containers"
   "ipaddr"
   "ppx_deriving"
   "ounit" {test}
 ]
 
-depopts: [ "lwt" ]
+depopts: ["lwt"]
 
 available: [ocaml-version >= "4.02.0"]

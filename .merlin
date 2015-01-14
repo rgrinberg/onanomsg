@@ -1,6 +1,6 @@
 PRJ nanomsg
 PKG ctypes
-PKG ctypes.foreign
+PKG ctypes.cstubs
 PKG ipaddr
 PKG lwt.unix
 PKG lwt.ppx
@@ -9,9 +9,10 @@ PKG containers
 PKG containers.bigarray
 
 S lib
+S lib_gen
 S lib_test
 S examples
 
 B _build/lib
+B _build/lib_gen
 B _build/lib_test
-B _build/examples

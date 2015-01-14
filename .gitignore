@@ -1,3 +1,4 @@
+*.byte
 *.native
 _build/**
 *.log
@@ -8,3 +9,10 @@ _build/**
 _obuild/**
 ocp-build.root
 *.install
+configure
+api.odocl
+lib/META
+**/*.clib
+**/*.mllib
+**/*.mldylib
+setup.ml
