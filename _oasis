@@ -11,7 +11,7 @@ Homepage     : https://github.com/rgrinberg/onanomsg
 
 Flag lwt
   Description: build the Lwt library
-  Default:     false
+  Default:     true
 
 Library "nanomsg"
   Path:             lib
@@ -26,8 +26,8 @@ Library "nanomsg"
 Library "nanomsg_lwt"
   Path:          lib
   Modules:       Nanomsg_lwt
-  FindlibName:   lwt
   FindlibParent: nanomsg
+  FindlibName:   lwt
   Build$:        flag(lwt)
   Install$:      flag(lwt)
   BuildDepends:  nanomsg, lwt.unix
@@ -39,11 +39,11 @@ Executable "nanomsg_bindgen"
   BuildDepends:     ctypes.stubs
 
 Executable "suite"
-  Build$:           flag(tests)
+  Build$:           flag(tests) && flag(lwt)
   Install:          false
   Path:             lib_test
   MainIs:           suite.ml
-  BuildDepends:     oUnit (>= 2.0), nanomsg.lwt
+  BuildDepends:     nanomsg.lwt, oUnit (>= 2.0)
   CompiledObject:   best
 
 Test "nanomsg"
