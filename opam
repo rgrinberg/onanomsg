@@ -35,6 +35,7 @@ depends: [
   "ocamlfind" {build}
   "oasis" {build}
   "ctypes" {>= "0.3"}
+  "ctypes-foreign"
   "containers"
   "ipaddr"
   "ppx_deriving"
