@@ -220,7 +220,7 @@ let send_bigstring_buf ?(block=true) sock buf pos len =
     CCBigstring.blit buf pos ba 0 len;
     ignore @@ raise_notequal len
       (fun () -> C.nn_send sock nn_buf_p
-          (Unsigned.Size_t.of_int (-1)) (int_of_bool block))
+          (Unsigned.Size_t.of_int (-1)) (int_of_bool @@ not block))
 
 let send_bigstring ?(block=true) sock buf =
   send_bigstring_buf ~block sock buf 0 @@ CCBigstring.size buf
@@ -238,7 +238,7 @@ let send_bytes_buf ?(block=true) sock buf pos len =
     CCBigstring.blit_of_bytes buf pos ba 0 len;
     ignore @@ raise_notequal len
       (fun () -> C.nn_send sock nn_buf_p
-          (Unsigned.Size_t.of_int (-1)) (int_of_bool block))
+          (Unsigned.Size_t.of_int (-1)) (int_of_bool @@ not block))
 
 let send_bytes ?(block=true) sock b =
   send_bytes_buf ~block sock b 0 @@ Bytes.length b
@@ -255,7 +255,7 @@ let recv ?(block=true) sock f =
   let nb_recv =
     raise_negative
       (fun () -> C.nn_recv sock ba_start_p
-          (Unsigned.Size_t.of_int (-1)) (int_of_bool block)) in
+          (Unsigned.Size_t.of_int (-1)) (int_of_bool @@ not block)) in
   let ba_start = !@ ba_start_p in
   if nb_recv < 0 then throw ()
   else
