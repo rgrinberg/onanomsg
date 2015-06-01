@@ -7,6 +7,8 @@ PKG lwt.ppx
 PKG oUnit
 PKG containers
 PKG containers.bigarray
+PKG ppx_deriving.std
+PKG async
 
 S lib
 S lib_gen
