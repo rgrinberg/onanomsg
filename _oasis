@@ -13,6 +13,10 @@ Flag lwt
   Description: build the Lwt library
   Default:     true
 
+Flag async
+  Description: build the Async library
+  Default:     true
+
 Library "nanomsg"
   Path:             lib
   Modules:          Nanomsg
@@ -31,6 +35,15 @@ Library "nanomsg_lwt"
   Build$:        flag(lwt)
   Install$:      flag(lwt)
   BuildDepends:  nanomsg, lwt.unix
+
+Library "nanomsg_async"
+  Path:          lib
+  Modules:       Nanomsg_async
+  FindlibParent: nanomsg
+  FindlibName:   async
+  Build$:        flag(async)
+  Install$:      flag(async)
+  BuildDepends:  nanomsg, core, async, threads
 
 Executable "nanomsg_bindgen"
   Install:          false

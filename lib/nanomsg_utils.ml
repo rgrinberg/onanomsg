@@ -54,20 +54,24 @@ module Symbol = struct
     try Some (errvalue_of_errno_exn errno) with Not_found -> None
 end
 
-exception Error of string * string
-
-let throw () =
+let error () =
   let code = C.nn_errno () in
   let err_string = C.nn_strerror code in
   let err_value =
     if code > 156384712
     then Symbol.errvalue_of_errno_exn code
     else "" in
-  raise (Error (err_value, err_string))
+  `Error (err_value, err_string)
 
-let raise_if cond f =
+let maybe_error cond f =
   let res = f () in
-  if cond res then throw () else res
+  if cond res then error () else `Ok res
 
-let raise_negative = raise_if (fun x -> x < 0)
-let raise_notequal v = raise_if (fun x -> x <> v)
+let maybe_error_ign cond f =
+  let res = f () in
+  if cond res then error () else `Ok ()
+
+let error_if_negative = maybe_error (fun x -> x < 0)
+let error_if_notequal v = maybe_error (fun x -> x <> v)
+let error_if_negative_ign = maybe_error_ign (fun x -> x < 0)
+let error_if_notequal_ign v = maybe_error_ign (fun x -> x <> v)
