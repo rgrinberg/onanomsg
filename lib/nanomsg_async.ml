@@ -1,6 +1,8 @@
 open Core.Std
 open Async.Std
 
+module Bytes = Caml.Bytes
+
 open Nanomsg_utils
 open Nanomsg
 
