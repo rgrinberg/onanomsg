@@ -16,7 +16,7 @@ license: "WTFPL"
 
 build: [
   ["oasis" "setup"]
-  ["./configure" "--%{lwt:enable}%-lwt"]
+  ["./configure" "--%{lwt:enable}%-lwt" "--%{async:enable}%-async"]
   [make]
 ]
 
@@ -26,7 +26,9 @@ remove: ["ocamlfind" "remove" "nanomsg"]
 
 build-test: [
   ["oasis" "setup"]
-  ["./configure" "--enable-tests" "--%{lwt:enable}%-lwt"]
+  ["./configure" "--enable-tests"
+    "--%{lwt:enable}%-lwt"
+    "--%{async:enable}%-async"]
   [make]
 ]
 
@@ -42,6 +44,6 @@ depends: [
   "ounit" {test}
 ]
 
-depopts: ["lwt"]
+depopts: ["lwt" "async"]
 
 available: [ocaml-version >= "4.02.0"]
