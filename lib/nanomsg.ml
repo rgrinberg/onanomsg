@@ -361,3 +361,8 @@ let set_ipv4_only sock b =
   setsockopt_int sock "NN_SOL_SOCKET" "NN_IPV4ONLY" (int_of_bool b)
 
 let term = C.nn_term
+
+let device s1 s2 =
+  (fun () -> C.nn_device s1 s2)
+  |> error_if_negative
+  |> CCError.map ignore
