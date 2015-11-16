@@ -1,6 +1,5 @@
-PRJ nanomsg
 PKG ctypes
-PKG ctypes.cstubs
+PKG ctypes.stubs
 PKG ipaddr
 PKG lwt.unix
 PKG lwt.ppx
