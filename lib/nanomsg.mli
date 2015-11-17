@@ -12,7 +12,7 @@ type proto =
   | Push
   | Pull
   | Surveyor
-  | Respondant
+  | Respondent
   | Bus
   [@@deriving show]
 

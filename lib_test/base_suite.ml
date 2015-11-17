@@ -96,35 +96,32 @@ let (>>=?) m msg f =
 
 let socket_test ctx =
   let domains = [AF_SP; AF_SP_RAW] in
-  let protos = [Pair; Pub; Sub; Req; Rep; Push; Pull; Surveyor; Respondant; Bus] in
-  List.iter
-    (fun d ->
-       List.iter
-         (fun p ->
-            let open CCError in
-            CCError.catch
-              (socket ~domain:d p >>= fun sock ->
-               domain sock >>= fun sock_domain ->
-               proto sock >>= fun sock_proto ->
-               get_linger sock >>= fun sock_linger ->
-               assert_equal d sock_domain;
-               assert_equal p sock_proto;
-               assert_equal (`Ms 1000) sock_linger;
-               set_linger sock `Inf >>= fun () ->
-               get_linger sock >>= fun sock_linger ->
-               assert_equal `Inf sock_linger;
-               set_send_bufsize sock 256 >>= fun () ->
-               set_recv_bufsize sock 256 >>= fun () ->
-               get_send_bufsize sock >>= fun send_bufsize ->
-               get_recv_bufsize sock >>= fun recv_bufsize ->
-               assert_equal 256 send_bufsize;
-               assert_equal 256 recv_bufsize;
-               close sock)
-              ~ok:(fun () -> ())
-              ~err:(fun (e, m) -> failwith m);
-         )
-         protos
-    ) domains
+  let protos = [Pair; Pub; Sub; Req; Rep; Push; Pull; Surveyor; Respondent; Bus] in
+  List.iter (fun d ->
+    List.iter (fun p ->
+      let open CCError in
+      CCError.catch
+        (socket ~domain:d p >>= fun sock ->
+         domain sock >>= fun sock_domain ->
+         proto sock >>= fun sock_proto ->
+         get_linger sock >>= fun sock_linger ->
+         assert_equal d sock_domain;
+         assert_equal p sock_proto;
+         assert_equal (`Ms 1000) sock_linger;
+         set_linger sock `Inf >>= fun () ->
+         get_linger sock >>= fun sock_linger ->
+         assert_equal `Inf sock_linger;
+         set_send_bufsize sock 256 >>= fun () ->
+         set_recv_bufsize sock 256 >>= fun () ->
+         get_send_bufsize sock >>= fun send_bufsize ->
+         get_recv_bufsize sock >>= fun recv_bufsize ->
+         assert_equal 256 send_bufsize;
+         assert_equal 256 recv_bufsize;
+         close sock)
+        ~ok:(fun () -> ())
+        ~err:(fun (e, m) -> failwith m);
+    ) protos
+  ) domains
 
 let device_test ctx =
   (* int s1 = nn_socket (AF_SP_RAW, NN_REQ); *)
@@ -138,8 +135,7 @@ let device_test ctx =
      bind s1 (`Tcp (`All, 5555)) >>= fun eid1 ->
      socket ~domain:AF_SP_RAW Rep >>= fun s2 ->
      bind s2 (`Tcp (`All, 5556)) >>= fun eid2 ->
-     device s1 s2
-    )
+     device s1 s2)
 
 let send_recv_fd_test ctx =
   let sock = socket_exn Pair in
