@@ -99,7 +99,7 @@ let socket_test ctx =
        List.iter
          (fun p ->
             let open CCError in
-            get_exn
+            CCError.catch
               (socket ~domain:d p >>= fun sock ->
                domain sock >>= fun sock_domain ->
                proto sock >>= fun sock_proto ->
@@ -117,10 +117,27 @@ let socket_test ctx =
                assert_equal 256 send_bufsize;
                assert_equal 256 recv_bufsize;
                close sock)
+              ~ok:(fun () -> ())
+              ~err:(fun (e, m) -> failwith m);
          )
          protos
     )
     domains
+
+let device_test ctx =
+  (* int s1 = nn_socket (AF_SP_RAW, NN_REQ); *)
+  (* nn_bind (s1, "tcp://eth0:5555"); *)
+  (* int s2 = nn_socket (AF_SP_RAW, NN_REP); *)
+  (* nn_bind (s2, "tcp://eth0:5556"); *)
+  (* nn_device (s1, s2); *)
+  let open CCError in
+  get_exn
+    (socket ~domain:AF_SP_RAW Req >>= fun s1 ->
+     bind s1 (`Tcp (`All, 5555)) >>= fun eid1 ->
+     socket ~domain:AF_SP_RAW Rep >>= fun s2 ->
+     bind s2 (`Tcp (`All, 5556)) >>= fun eid2 ->
+     device s1 s2
+    )
 
 let send_recv_fd_test ctx =
   let sock = socket_exn Pair in
