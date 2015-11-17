@@ -43,6 +43,7 @@ val shutdown : socket -> eid -> (unit, error) CCError.t
 val shutdown_exn : socket -> eid -> unit
 val close : socket -> (unit, error) CCError.t
 val close_exn : socket -> unit
+val device : socket -> socket -> (unit, error) CCError.t
 
 (** {1 I/O } *)
 
