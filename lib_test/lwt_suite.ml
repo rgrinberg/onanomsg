@@ -1,10 +1,10 @@
 open Lwt.Infix
-open OUnit2
+open OUnit
 
 open Nanomsg
 module NB = Nanomsg_lwt
 
-let reqrep_test ctx =
+let reqrep_test _ =
   let open CCError in
   let receiver = socket_exn Rep in
   let sender = socket_exn Req in
@@ -17,7 +17,11 @@ let reqrep_test ctx =
   close sender >|= fun () ->
   assert_equal packet received
 
-let tcp_pubsub_test ctx =
+let ok msg = function
+  | `Error m -> assert_failure msg
+  | `Ok v -> v
+
+let tcp_pubsub_test _ =
   let open Nanomsg_lwt in
   let inner () =
     let port = 56352 in
@@ -25,14 +29,14 @@ let tcp_pubsub_test ctx =
     wrap_error @@ socket Sub >>= fun sub ->
     wrap_error @@ set_ipv4_only pub false >>= fun () ->
     wrap_error @@ set_ipv4_only sub false >>= fun () ->
-    let _ = bind pub @@ `Tcp (`All, port) in
-    let _ = connect sub @@ `Tcp ((`V6 Ipaddr.V6.localhost, None), port) in
+    let _ = ok "tcp_pubsub: bind" @@ bind pub @@ `Tcp (`All, port) in
+    let _ = ok "tcp_pubsub: connect" @@ connect sub @@
+      `Tcp ((`V6 Ipaddr.V6.localhost, None), port) in
     wrap_error @@ Nanomsg.subscribe sub "" >>= fun () ->
     let msg = "bleh" in
     let len = String.length msg in
     let recv_msg = Bytes.create @@ String.length msg in
     let recv_msg' = Bytes.create @@ String.length msg in
-    let open Lwt.Infix in
     let th = Nanomsg_lwt.send_string pub msg in
     Nanomsg_lwt.recv_string sub >>= fun str ->
     assert_equal (Lwt.Return ()) (Lwt.state th);
@@ -49,7 +53,7 @@ let tcp_pubsub_test ctx =
     close sub
   in Lwt_main.run @@ inner ()
 
-let pipeline_local_test ctx =
+let pipeline_local_test _ =
   let open Nanomsg_lwt in
   let msgs = [|"foo"; "bar"; "baz"|] in
   let receiver addr =
@@ -71,19 +75,14 @@ let pipeline_local_test ctx =
     Lwt_unix.yield () >>= fun () -> wrap_error @@ close s
   in
   Lwt_main.run @@
-    Lwt.join
-      [
-        sender (`Inproc "rdvpoint");
-        receiver (`Inproc "rdvpoint")
-      ]
+  Lwt.join
+    [ sender (`Inproc "rdvpoint")
+    ; receiver (`Inproc "rdvpoint") ]
 
 let suite =
   "Nanomsg">:::
-  [
-    "reqrep" >:: (fun a -> CCError.get_exn @@ reqrep_test a);
-    "tcp_pubsub" >:: (fun a -> CCError.get_exn @@ tcp_pubsub_test a);
-    "pipeline_local" >:: pipeline_local_test;
-  ]
+  [ "reqrep" >:: (fun a -> CCError.get_exn @@ reqrep_test a)
+  ; "tcp_pubsub" >:: (fun a -> CCError.get_exn @@ tcp_pubsub_test a)
+  ; "pipeline_local" >:: pipeline_local_test ]
 
-let () =
-  run_test_tt_main suite
+let () = ignore (run_test_tt_main suite)
