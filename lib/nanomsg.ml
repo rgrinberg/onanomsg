@@ -11,8 +11,8 @@ type proto =
   | Rep [@value 49]
   | Push [@value 80]
   | Pull [@value 81]
-  | Surveyor [@value 96]
-  | Respondant [@value 97]
+  | Surveyor [@value 98]
+  | Respondant [@value 99]
   | Bus [@value 112]
       [@@deriving enum]
 
