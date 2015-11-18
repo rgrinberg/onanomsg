@@ -27,15 +27,15 @@ let throw () =
   Lwt.fail (Error (err_value, err_string))
 
 let fail_if sock io_event cond f =
-    bind_error
-      (fun fd ->
-         Lwt_unix.(wrap_syscall io_event (of_unix_file_descr fd) f) >>= fun res ->
-         if cond res then throw () else Lwt.return res
-      )
-      (match io_event with
-       | Lwt_unix.Write -> send_fd sock
-       | Lwt_unix.Read -> recv_fd sock
-      )
+  bind_error
+    (fun fd ->
+       Lwt_unix.(wrap_syscall io_event (of_unix_file_descr fd) f) >>= fun res ->
+       if cond res then throw () else Lwt.return res
+    )
+    (match io_event with
+     | Lwt_unix.Write -> send_fd sock
+     | Lwt_unix.Read -> recv_fd sock
+    )
 
 
 let fail_negative sock io_event f = fail_if sock io_event (fun x -> x < 0) f
@@ -55,8 +55,8 @@ let send_buf blitf lenf sock buf pos len =
       blitf buf pos ba 0 len;
       fail_notequal sock Lwt_unix.Write len
         (fun () -> C.nn_send (Obj.magic sock : int)
-            nn_buf_p (Unsigned.Size_t.of_int (-1))
-            Symbol.(value_of_name_exn "NN_DONTWAIT")) >|= fun nb_written ->
+                     nn_buf_p (Unsigned.Size_t.of_int (-1))
+                     Symbol.(value_of_name_exn "NN_DONTWAIT")) >|= fun nb_written ->
       ignore nb_written
 
 let send_bigstring_buf = send_buf CCBigstring.blit CCBigstring.size
@@ -80,29 +80,29 @@ let recv sock f =
   let ba_start_p = allocate (ptr void) null in
   fail_negative sock Lwt_unix.Read
     (fun () -> C.nn_recv (Obj.magic sock : int)
-        ba_start_p (Unsigned.Size_t.of_int (-1))
-        Symbol.(value_of_name_exn "NN_DONTWAIT")) >>= fun nb_recv ->
+                 ba_start_p (Unsigned.Size_t.of_int (-1))
+                 Symbol.(value_of_name_exn "NN_DONTWAIT")) >>= fun nb_recv ->
   let ba_start = !@ ba_start_p in
   let ba = bigarray_of_ptr array1 nb_recv
-      Bigarray.char (from_voidp char ba_start) in
+             Bigarray.char (from_voidp char ba_start) in
   f ba >|= fun res ->
   let (_:int) = C.nn_freemsg ba_start in
   res
 
 let recv_bytes_buf sock buf pos =
   recv sock (fun ba ->
-      let len = CCBigstring.size ba in
-      CCBigstring.blit_to_bytes ba 0 buf pos len;
-      Lwt.return len
-    )
+    let len = CCBigstring.size ba in
+    CCBigstring.blit_to_bytes ba 0 buf pos len;
+    Lwt.return len
+  )
 
 let recv_bytes sock =
   recv sock (fun ba ->
-      let len = CCBigstring.size ba in
-      let buf = Bytes.create len in
-      CCBigstring.blit_to_bytes ba 0 buf 0 len;
-      Lwt.return buf
-    )
+    let len = CCBigstring.size ba in
+    let buf = Bytes.create len in
+    CCBigstring.blit_to_bytes ba 0 buf 0 len;
+    Lwt.return buf
+  )
 
 let recv_string sock = recv_bytes sock >|= Bytes.unsafe_to_string
 

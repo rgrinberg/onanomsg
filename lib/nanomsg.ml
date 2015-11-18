@@ -2,7 +2,12 @@ open Nanomsg_utils
 
 type error = string * string
 type socket = int
-type domain = AF_SP [@value 1] | AF_SP_RAW [@@deriving enum]
+
+type domain =
+  | AF_SP [@value 1]
+  | AF_SP_RAW
+  [@@deriving enum, show]
+
 type proto =
   | Pair [@value 16]
   | Pub [@value 32]
@@ -12,9 +17,9 @@ type proto =
   | Push [@value 80]
   | Pull [@value 81]
   | Surveyor [@value 98]
-  | Respondant [@value 99]
+  | Respondent [@value 99]
   | Bus [@value 112]
-      [@@deriving enum]
+  [@@deriving enum, show]
 
 module Addr = struct
   module V4 = struct

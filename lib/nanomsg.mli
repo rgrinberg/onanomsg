@@ -1,5 +1,21 @@
-type domain = AF_SP | AF_SP_RAW
-type proto = Pair | Pub | Sub | Req | Rep | Push | Pull | Surveyor | Respondant | Bus
+type domain =
+  | AF_SP
+  | AF_SP_RAW
+  [@@deriving show]
+
+type proto =
+  | Pair
+  | Pub
+  | Sub
+  | Req
+  | Rep
+  | Push
+  | Pull
+  | Surveyor
+  | Respondent
+  | Bus
+  [@@deriving show]
+
 type socket
 
 module Addr : sig
@@ -8,12 +24,12 @@ module Addr : sig
     | `V4 of Ipaddr.V4.t
     | `V6 of Ipaddr.V6.t
     | `Iface of string ]
-      [@@deriving show]
+    [@@deriving show]
 
   type connect =
     [`V4 of Ipaddr.V4.t | `V6 of Ipaddr.V6.t | `Dns of string] *
     [`V4 of Ipaddr.V4.t | `V6 of Ipaddr.V6.t | `Iface of string] option
-      [@@deriving show]
+    [@@deriving show]
 
   type 'a t = [
     | `Inproc of string

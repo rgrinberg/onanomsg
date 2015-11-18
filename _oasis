@@ -51,16 +51,27 @@ Executable "nanomsg_bindgen"
   MainIs:           nanomsg_bindgen.ml
   BuildDepends:     ctypes.stubs
 
-Executable "suite"
+Executable "base_suite"
+  Build$:           flag(tests)
+  Install:          false
+  Path:             lib_test
+  MainIs:           base_suite.ml
+  BuildDepends:     nanomsg, oUnit (>= 2.0)
+  CompiledObject:   best
+
+Executable "lwt_suite"
   Build$:           flag(tests) && flag(lwt)
   Install:          false
   Path:             lib_test
-  MainIs:           suite.ml
+  MainIs:           lwt_suite.ml
   BuildDepends:     nanomsg.lwt, oUnit (>= 2.0)
   CompiledObject:   best
 
 Test "nanomsg"
-  Command:          $suite -shards 1 -runner sequential
+  Command:          $base_suite -shards 1 -runner sequential
+
+Test "nanomsg_lwt"
+  Command:          $lwt_suite -shards 1 -runner sequential
 
 AlphaFeatures: ocamlbuild_more_args
 Document "api"
