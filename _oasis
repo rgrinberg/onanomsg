@@ -68,10 +68,10 @@ Executable "lwt_suite"
   CompiledObject:   best
 
 Test "nanomsg"
-  Command:          $base_suite -shards 1 -runner sequential
+  Command:          $base_suite
 
 Test "nanomsg_lwt"
-  Command:          $lwt_suite -shards 1 -runner sequential
+  Command:          $lwt_suite
 
 AlphaFeatures: ocamlbuild_more_args
 Document "api"
