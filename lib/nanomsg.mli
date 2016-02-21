@@ -65,14 +65,14 @@ val device : socket -> socket -> (unit, error) CCError.t
 
 (** {2 Zero-copy I/O} *)
 
-val send_bigstring : ?block:bool -> socket -> CCBigstring.t -> (unit, error) CCError.t
-val send_bigstring_buf : ?block:bool -> socket -> CCBigstring.t -> int -> int -> (unit, error) CCError.t
+val send_bigstring : ?block:bool -> socket -> Bigstring.t -> (unit, error) CCError.t
+val send_bigstring_buf : ?block:bool -> socket -> Bigstring.t -> int -> int -> (unit, error) CCError.t
 val send_string : ?block:bool -> socket -> string -> (unit, error) CCError.t
 val send_string_buf : ?block:bool -> socket -> string -> int -> int -> (unit, error) CCError.t
 val send_bytes : ?block:bool -> socket -> Bytes.t -> (unit, error) CCError.t
 val send_bytes_buf : ?block:bool -> socket -> Bytes.t -> int -> int -> (unit, error) CCError.t
 
-val recv : ?block:bool -> socket -> (CCBigstring.t -> 'a) -> ('a, error) CCError.t
+val recv : ?block:bool -> socket -> (Bigstring.t -> 'a) -> ('a, error) CCError.t
 (** [recv ?block sock f] applies [f] to the received message. The
     argument of [f] gets unallocated after [f] returns, so make sure
     [f] {b never} let a reference to its argument escape. *)

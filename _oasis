@@ -24,7 +24,7 @@ Library "nanomsg"
   CSources:         nanomsg_stubs.c
   CCLib:            -lnanomsg
   CCOpt:            -I $pkg_ctypes_stubs
-  BuildDepends:     bytes, ctypes.stubs, containers, containers.bigarray, ipaddr, ppx_deriving.std
+  BuildDepends:     bytes, ctypes.stubs, containers, bigstring, ipaddr, ppx_deriving.std
   BuildTools:       nanomsg_bindgen
 
 Library "nanomsg_lwt"
