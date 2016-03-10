@@ -233,7 +233,7 @@ let recv_fd sock =
   (Obj.magic fd : Unix.file_descr)
 
 let send_bigstring_buf ?(block=true) sock buf pos len =
-  if pos < 0 || len < 0 || pos + len > CCBigstring.size buf
+  if pos < 0 || len < 0 || pos + len > Bigstring.size buf
   then invalid_arg "bounds";
   let nn_buf = C.nn_allocmsg (Unsigned.Size_t.of_int len) 0 in
   match nn_buf with
@@ -242,14 +242,14 @@ let send_bigstring_buf ?(block=true) sock buf pos len =
     let nn_buf_p = Ctypes.(allocate (ptr void) nn_buf) in
     let ba = Ctypes.(bigarray_of_ptr array1 len
                        Bigarray.char @@ from_voidp char nn_buf) in
-    CCBigstring.blit buf pos ba 0 len;
+    Bigstring.blit buf pos ba 0 len;
     CCError.map ignore @@
     error_if_notequal len
       (fun () -> C.nn_send sock nn_buf_p
           (Unsigned.Size_t.of_int (-1)) (int_of_bool @@ not block))
 
 let send_bigstring ?(block=true) sock buf =
-  send_bigstring_buf ~block sock buf 0 @@ CCBigstring.size buf
+  send_bigstring_buf ~block sock buf 0 @@ Bigstring.size buf
 
 let send_bytes_buf ?(block=true) sock buf pos len =
   if pos < 0 || len < 0 || pos + len > Bytes.length buf
@@ -261,7 +261,7 @@ let send_bytes_buf ?(block=true) sock buf pos len =
     let nn_buf_p = Ctypes.(allocate (ptr void) nn_buf) in
     let ba = Ctypes.(bigarray_of_ptr array1 len
                        Bigarray.char @@ from_voidp char nn_buf) in
-    CCBigstring.blit_of_bytes buf pos ba 0 len;
+    Bigstring.blit_of_bytes buf pos ba 0 len;
     CCError.map ignore @@
     error_if_notequal len
       (fun () -> C.nn_send sock nn_buf_p
@@ -295,16 +295,16 @@ let recv ?(block=true) sock f =
 let recv_bytes_buf ?(block=true) sock buf pos =
   recv ~block sock
     (fun ba ->
-       let len = CCBigstring.size ba in
-       CCBigstring.(blit_to_bytes ba 0 buf pos len);
+       let len = Bigstring.size ba in
+       Bigstring.(blit_to_bytes ba 0 buf pos len);
        len
     )
 
 let recv_bytes ?(block=true) sock =
   recv ~block sock (fun ba ->
-      let len = CCBigstring.size ba in
+      let len = Bigstring.size ba in
       let buf = Bytes.create len in
-      CCBigstring.blit_to_bytes ba 0 buf 0 len;
+      Bigstring.blit_to_bytes ba 0 buf 0 len;
       buf)
 
 let recv_string ?(block=true) sock =

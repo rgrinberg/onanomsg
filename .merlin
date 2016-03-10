@@ -5,7 +5,7 @@ PKG lwt.unix
 PKG lwt.ppx
 PKG oUnit
 PKG containers
-PKG containers.bigarray
+PKG bigstring
 PKG ppx_deriving.std
 PKG async
 

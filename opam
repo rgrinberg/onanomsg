@@ -41,6 +41,7 @@ depends: [
   "containers"
   "ipaddr"
   "ppx_deriving"
+  "bigstring"
   "ounit" {test}
 ]
 
