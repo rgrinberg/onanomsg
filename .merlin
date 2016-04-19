@@ -4,7 +4,7 @@ PKG ipaddr
 PKG lwt.unix
 PKG lwt.ppx
 PKG oUnit
-PKG containers
+PKG result
 PKG bigstring
 PKG ppx_deriving.std
 PKG async

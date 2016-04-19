@@ -5,7 +5,7 @@ open Nanomsg
 module NB = Nanomsg_lwt
 
 let reqrep_test _ =
-  let open CCError in
+  let open Nanomsg_utils.Res in
   let receiver = socket_exn Rep in
   let sender = socket_exn Req in
   let _ = bind_exn receiver @@ `Inproc "*" in
@@ -18,8 +18,8 @@ let reqrep_test _ =
   assert_equal packet received
 
 let ok msg = function
-  | `Error m -> assert_failure msg
-  | `Ok v -> v
+  | Result.Error m -> assert_failure msg
+  | Result.Ok v -> v
 
 let tcp_pubsub_test _ =
   let open Nanomsg_lwt in
@@ -81,8 +81,8 @@ let pipeline_local_test _ =
 
 let suite =
   "Nanomsg">:::
-  [ "reqrep" >:: (fun a -> CCError.get_exn @@ reqrep_test a)
-  ; "tcp_pubsub" >:: (fun a -> CCError.get_exn @@ tcp_pubsub_test a)
+  [ "reqrep" >:: (fun a -> Nanomsg_utils.Res.get_exn @@ reqrep_test a)
+  ; "tcp_pubsub" >:: (fun a -> Nanomsg_utils.Res.get_exn @@ tcp_pubsub_test a)
   ; "pipeline_local" >:: pipeline_local_test ]
 
 let () = ignore (run_test_tt_main suite)

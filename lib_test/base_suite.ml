@@ -99,8 +99,8 @@ let socket_test ctx =
   let protos = [Pair; Pub; Sub; Req; Rep; Push; Pull; Surveyor; Respondent; Bus] in
   List.iter (fun d ->
     List.iter (fun p ->
-      let open CCError in
-      CCError.catch
+      let open Nanomsg_utils.Res in
+      catch
         (socket ~domain:d p >>= fun sock ->
          domain sock >>= fun sock_domain ->
          proto sock >>= fun sock_proto ->
@@ -129,7 +129,7 @@ let device_test ctx =
   (* int s2 = nn_socket (AF_SP_RAW, NN_REP); *)
   (* nn_bind (s2, "tcp://eth0:5556"); *)
   (* nn_device (s1, s2); *)
-  let open CCError in
+  let open Nanomsg_utils.Res in
   get_exn
     (socket ~domain:AF_SP_RAW Req >>= fun s1 ->
      bind s1 (`Tcp (`All, 5555)) >>= fun eid1 ->
@@ -144,7 +144,7 @@ let send_recv_fd_test ctx =
   close_exn sock
 
 let reqrep_test ctx =
-  let open CCError in
+  let open Nanomsg_utils.Res in
   let receiver = socket_exn Rep in
   let sender = socket_exn Req in
   let _ = bind_exn receiver @@ `Inproc "*" in
@@ -157,7 +157,7 @@ let reqrep_test ctx =
   assert_equal packet received
 
 let pubsub_local_test ctx =
-  let open CCError in
+  let open Nanomsg_utils.Res in
   let address = `Inproc "t2" in
   socket Sub >>= fun sub ->
   subscribe sub "" >>= fun () ->
@@ -172,7 +172,7 @@ let pubsub_local_test ctx =
   assert_equal packet recv_msg
 
 let pubsub_local_2subs_test ctx =
-  let open CCError in
+  let open Nanomsg_utils.Res in
   let addr1 = `Inproc "tt1" in
   let addr2 = `Inproc "tt2" in
   socket Sub >>= fun sub1 ->
@@ -202,9 +202,9 @@ let suite =
     "connect_to_string" >:: connect_to_string_test;
     "socket" >:: socket_test;
     "send_recv_fd" >:: send_recv_fd_test;
-    "reqrep" >:: (fun a -> CCError.get_exn @@ reqrep_test a);
-    "pubsub_local" >:: (fun a -> CCError.get_exn @@ pubsub_local_test a);
-    "pubsub_local_2subs" >:: (fun a -> CCError.get_exn @@ pubsub_local_2subs_test a);
+    "reqrep" >:: (fun a -> Nanomsg_utils.Res.get_exn @@ reqrep_test a);
+    "pubsub_local" >:: (fun a -> Nanomsg_utils.Res.get_exn @@ pubsub_local_test a);
+    "pubsub_local_2subs" >:: (fun a -> Nanomsg_utils.Res.get_exn @@ pubsub_local_2subs_test a);
   ]
 
 let () =
