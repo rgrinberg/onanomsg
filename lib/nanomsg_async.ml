@@ -39,11 +39,11 @@ let send_buf blitf lenf sock buf pos len =
             Symbol.(value_of_name_exn "NN_DONTWAIT") in
         CCError.return ()
 
-let send_bigstring_buf = send_buf CCBigstring.blit CCBigstring.size
-let send_bytes_buf = send_buf CCBigstring.blit_of_bytes Bytes.length
+let send_bigstring_buf = send_buf Bigstring.blit Bigstring.size
+let send_bytes_buf = send_buf Bigstring.blit_of_bytes Bytes.length
 
 let send_bigstring sock buf =
-  send_bigstring_buf sock buf 0 @@ CCBigstring.size buf
+  send_bigstring_buf sock buf 0 @@ Bigstring.size buf
 
 let send_bytes sock b =
   send_bytes_buf sock b 0 (Bytes.length b)
@@ -73,16 +73,16 @@ let recv sock f =
 
 let recv_bytes_buf sock buf pos =
   recv sock (fun ba ->
-      let len = CCBigstring.size ba in
-      CCBigstring.blit_to_bytes ba 0 buf pos len;
+      let len = Bigstring.size ba in
+      Bigstring.blit_to_bytes ba 0 buf pos len;
       return len
     )
 
 let recv_bytes sock =
   recv sock (fun ba ->
-      let len = CCBigstring.size ba in
+      let len = Bigstring.size ba in
       let buf = Bytes.create len in
-      CCBigstring.blit_to_bytes ba 0 buf 0 len;
+      Bigstring.blit_to_bytes ba 0 buf 0 len;
       return buf
     )
 
