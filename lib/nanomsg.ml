@@ -85,7 +85,7 @@ module Addr = struct
     | `Inproc a -> "inproc://" ^ a
     | `Ipc a -> "ipc://" ^ a
     | `Tcp ((addr, iface), port) ->
-      let iface = CCOpt.map iface_to_string iface in
+      let iface = Opt.map iface_to_string iface in
       let addr = addr_to_string addr in
       "tcp://" ^
       (match iface with Some i -> i ^ ";" | None -> "")
@@ -133,35 +133,35 @@ let socket ?(domain=AF_SP) proto =
       C.nn_socket (domain_to_enum domain) (proto_to_enum proto))
 
 let socket_exn ?(domain=AF_SP) proto =
-  socket ~domain proto |> CCError.get_exn
+  socket ~domain proto |> Res.get_exn
 
 let bind sock addr =
   error_if_negative (fun () -> C.nn_bind sock @@ Addr.bind_to_string addr)
 
 let bind_exn sock addr =
-  bind sock addr |> CCError.get_exn
+  bind sock addr |> Res.get_exn
 
 let connect sock addr =
   error_if_negative (fun () -> C.nn_connect sock @@ Addr.connect_to_string addr)
 
-let connect_exn sock addr = connect sock addr |> CCError.get_exn
+let connect_exn sock addr = connect sock addr |> Res.get_exn
 
 let shutdown s e =
-  CCError.map ignore @@
+  Res.map ignore @@
   error_if_notequal 0 (fun () -> C.nn_shutdown s e)
 
-let shutdown_exn s e = shutdown s e |> CCError.get_exn
+let shutdown_exn s e = shutdown s e |> Res.get_exn
 
 let close sock =
-  CCError.map ignore @@
+  Res.map ignore @@
   error_if_notequal 0 (fun () -> C.nn_close sock)
 
-let close_exn sock = close sock |> CCError.get_exn
+let close_exn sock = close sock |> Res.get_exn
 
 (* getsockopt *)
 
 let getsockopt ~typ ~init sock level opt =
-  let open CCError in
+  let open Res in
   let open Ctypes in
   let p = allocate typ init in
   let size = allocate size_t @@ Unsigned.Size_t.of_int (sizeof typ) in
@@ -175,21 +175,21 @@ let getsockopt ~typ ~init sock level opt =
 let getsockopt_int = getsockopt ~typ:Ctypes.int ~init:0
 
 let domain sock =
-  let open CCError in
+  let open Res in
   getsockopt_int sock "NN_SOL_SOCKET" "NN_DOMAIN" >>= fun v ->
   match domain_of_enum v with
-  | Some v -> `Ok v
-  | None -> `Error ("Internal", "domain_of_enum")
+  | Some v -> Result.Ok v
+  | None -> Result.Error ("Internal", "domain_of_enum")
 
 let proto sock =
-  let open CCError in
+  let open Res in
   getsockopt_int sock "NN_SOL_SOCKET" "NN_PROTOCOL" >>= fun v ->
   match proto_of_enum v with
-  | Some v -> `Ok v
-  | None -> `Error ("Internal", "proto_of_enum")
+  | Some v -> Result.Ok v
+  | None -> Result.Error ("Internal", "proto_of_enum")
 
 let get_linger sock =
-  CCError.map (fun n -> if n < 0 then `Inf else `Ms n) @@
+  Res.map (fun n -> if n < 0 then `Inf else `Ms n) @@
   getsockopt_int sock "NN_SOL_SOCKET" "NN_LINGER"
 
 let get_send_bufsize sock =
@@ -199,11 +199,11 @@ let get_recv_bufsize sock =
   getsockopt_int sock "NN_SOL_SOCKET" "NN_RCVBUF"
 
 let get_send_timeout sock =
-  CCError.map (fun n -> if n < 0 then `Inf else `Ms n) @@
+  Res.map (fun n -> if n < 0 then `Inf else `Ms n) @@
   getsockopt_int sock "NN_SOL_SOCKET" "NN_SNDTIMEO"
 
 let get_recv_timeout sock =
-  CCError.map (fun n -> if n < 0 then `Inf else `Ms n) @@
+  Res.map (fun n -> if n < 0 then `Inf else `Ms n) @@
   getsockopt_int sock "NN_SOL_SOCKET" "NN_RCVTIMEO"
 
 let get_reconnect_ival sock =
@@ -219,16 +219,16 @@ let get_recv_prio sock =
   getsockopt_int sock "NN_SOL_SOCKET" "NN_RCVPRIO"
 
 let get_ipv4only sock =
-  CCError.map bool_of_int @@
+  Res.map bool_of_int @@
   getsockopt_int sock "NN_SOL_SOCKET" "NN_IPV4ONLY"
 
 let send_fd sock =
-  let open CCError in
+  let open Res in
   getsockopt_int sock "NN_SOL_SOCKET" "NN_SNDFD" >|= fun fd ->
   (Obj.magic fd : Unix.file_descr)
 
 let recv_fd sock =
-  let open CCError in
+  let open Res in
   getsockopt_int sock "NN_SOL_SOCKET" "NN_RCVFD" >|= fun fd ->
   (Obj.magic fd : Unix.file_descr)
 
@@ -243,7 +243,7 @@ let send_bigstring_buf ?(block=true) sock buf pos len =
     let ba = Ctypes.(bigarray_of_ptr array1 len
                        Bigarray.char @@ from_voidp char nn_buf) in
     Bigstring.blit buf pos ba 0 len;
-    CCError.map ignore @@
+    Res.map ignore @@
     error_if_notequal len
       (fun () -> C.nn_send sock nn_buf_p
           (Unsigned.Size_t.of_int (-1)) (int_of_bool @@ not block))
@@ -262,7 +262,7 @@ let send_bytes_buf ?(block=true) sock buf pos len =
     let ba = Ctypes.(bigarray_of_ptr array1 len
                        Bigarray.char @@ from_voidp char nn_buf) in
     Bigstring.blit_of_bytes buf pos ba 0 len;
-    CCError.map ignore @@
+    Res.map ignore @@
     error_if_notequal len
       (fun () -> C.nn_send sock nn_buf_p
           (Unsigned.Size_t.of_int (-1)) (int_of_bool @@ not block))
@@ -284,7 +284,7 @@ let recv ?(block=true) sock f =
       (fun () -> C.nn_recv sock ba_start_p
           (Unsigned.Size_t.of_int (-1)) (int_of_bool @@ not block)) in
   let ba_start = !@ ba_start_p in
-  CCError.map
+  Res.map
     (fun nb_recv ->
        let ba = bigarray_of_ptr array1 nb_recv
            Bigarray.char (from_voidp char ba_start) in
@@ -308,7 +308,7 @@ let recv_bytes ?(block=true) sock =
       buf)
 
 let recv_string ?(block=true) sock =
-  CCError.map Bytes.unsafe_to_string @@ recv_bytes ~block sock
+  Res.map Bytes.unsafe_to_string @@ recv_bytes ~block sock
 
 let setsockopt sock level opt optval optvalsize =
   let open Ctypes in
@@ -370,4 +370,4 @@ let term = C.nn_term
 let device s1 s2 =
   (fun () -> C.nn_device s1 s2)
   |> error_if_negative
-  |> CCError.map ignore
+  |> Res.map ignore

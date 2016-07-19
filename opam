@@ -38,7 +38,7 @@ depends: [
   "oasis" {build}
   "ctypes" {>= "0.3"}
   "ctypes-foreign"
-  "containers"
+  "result"
   "ipaddr"
   "ppx_deriving"
   "bigstring"

@@ -21,7 +21,7 @@ let ready sock io_event =
 
 let send_buf blitf lenf sock buf pos len =
   if pos < 0 || len < 0 || pos + len > lenf buf
-  then return @@ CCError.fail ("Internal", "bounds")
+  then return @@ Result.Error ("Internal", "bounds")
   else
     C.nn_allocmsg (Unsigned.Size_t.of_int len) 0 |> function
     | None -> return @@ error ()
@@ -31,13 +31,13 @@ let send_buf blitf lenf sock buf pos len =
                          Bigarray.char @@ from_voidp char nn_buf) in
       blitf buf pos ba 0 len;
       ready sock `Write >>| function
-      | `Bad_fd | `Closed -> CCError.fail ("Internal", "`Bad_fd | `Closed")
+      | `Bad_fd | `Closed -> Result.Error ("Internal", "`Bad_fd | `Closed")
       | `Ready ->
         let _ =
           C.nn_send (Obj.magic sock : int)
             nn_buf_p (Unsigned.Size_t.of_int (-1))
             Symbol.(value_of_name_exn "NN_DONTWAIT") in
-        CCError.return ()
+        Result.Ok ()
 
 let send_bigstring_buf = send_buf Bigstring.blit Bigstring.size
 let send_bytes_buf = send_buf Bigstring.blit_of_bytes Bytes.length
@@ -59,7 +59,7 @@ let recv sock f =
   let ba_start_p = allocate (ptr void) null in
   ready sock `Read >>= function
   | `Bad_fd | `Closed ->
-    return @@ CCError.fail ("Internal", "`Bad_fd | `Closed")
+    return @@ Result.Error ("Internal", "`Bad_fd | `Closed")
   | `Ready ->
     let nb_recv = C.nn_recv (Obj.magic sock : int)
         ba_start_p (Unsigned.Size_t.of_int (-1))
@@ -69,7 +69,7 @@ let recv sock f =
         Bigarray.char (from_voidp char ba_start) in
     f ba >>| fun res ->
     let (_:int) = C.nn_freemsg ba_start in
-    CCError.return res
+    Result.Ok res
 
 let recv_bytes_buf sock buf pos =
   recv sock (fun ba ->
@@ -87,5 +87,5 @@ let recv_bytes sock =
     )
 
 let recv_string sock =
-  recv_bytes sock >>| CCError.map Bytes.unsafe_to_string
+  recv_bytes sock >>| Nanomsg_utils.Res.map Bytes.unsafe_to_string
 

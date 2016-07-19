@@ -6,16 +6,16 @@ open Nanomsg
 exception Error of string * string
 
 let wrap_error = function
-  | `Error (name, descr) -> Lwt.fail (Error (name, descr))
-  | `Ok a -> Lwt.return a
+  | Result.Error (name, descr) -> Lwt.fail (Error (name, descr))
+  | Result.Ok a -> Lwt.return a
 
 let bind_error f = function
-  | `Error (name, descr) -> Lwt.fail (Error (name, descr))
-  | `Ok a -> f a
+  | Result.Error (name, descr) -> Lwt.fail (Error (name, descr))
+  | Result.Ok a -> f a
 
 let map_error f = function
-  | `Error (name, descr) -> Lwt.fail (Error (name, descr))
-  | `Ok a -> Lwt.return (f a)
+  | Result.Error (name, descr) -> Lwt.fail (Error (name, descr))
+  | Result.Ok a -> Lwt.return (f a)
 
 let throw () =
   let code = C.nn_errno () in
