@@ -7,6 +7,7 @@ PKG oUnit
 PKG result
 PKG bigstring
 PKG ppx_deriving.std
+PKG core
 PKG async
 
 S lib
