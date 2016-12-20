@@ -41,7 +41,11 @@ let fail_if sock io_event cond f =
 let fail_negative sock io_event f = fail_if sock io_event (fun x -> x < 0) f
 let fail_notequal sock io_event v f = fail_if sock io_event (fun x -> x <> v) f
 
-let send_buf blitf lenf sock buf pos len =
+let send_buf ?(pos=0) ?len blitf lenf sock buf =
+  let len = match len with
+    | None -> lenf buf
+    | Some len -> len
+  in
   if pos < 0 || len < 0 || pos + len > lenf buf
   then Lwt.fail (Error ("Internal", "bounds"))
   else
@@ -59,20 +63,12 @@ let send_buf blitf lenf sock buf pos len =
                      Symbol.(value_of_name_exn "NN_DONTWAIT")) >|= fun nb_written ->
       ignore nb_written
 
-let send_bigstring_buf = send_buf Bigstring.blit Bigstring.size
-let send_bytes_buf = send_buf Bigstring.blit_of_bytes Bytes.length
-
-let send_bigstring sock buf =
-  send_bigstring_buf sock buf 0 @@ Bigstring.size buf
-
-let send_bytes sock b =
-  send_bytes_buf sock b 0 (Bytes.length b)
-
-let send_string_buf sock s pos len =
-  send_bytes_buf sock (Bytes.unsafe_of_string s) pos len
-
-let send_string sock s =
-  send_bytes_buf sock (Bytes.unsafe_of_string s) 0 (String.length s)
+let send_bigstring ?pos ?len sock buf =
+  send_buf ?pos ?len Bigstring.blit Bigstring.size sock buf
+let send_bytes ?pos ?len sock buf =
+  send_buf ?pos ?len Bigstring.blit_of_bytes Bytes.length sock buf
+let send_string ?pos ?len sock s =
+  send_buf ?pos ?len Bigstring.blit_of_bytes Bytes.length sock (Bytes.unsafe_of_string s)
 
 let recv sock f =
   let open Lwt_unix in
@@ -89,7 +85,7 @@ let recv sock f =
   let (_:int) = C.nn_freemsg ba_start in
   res
 
-let recv_bytes_buf sock buf pos =
+let recv_buf ?(pos=0) sock buf =
   recv sock (fun ba ->
     let len = Bigstring.size ba in
     Bigstring.blit_to_bytes ba 0 buf pos len;
