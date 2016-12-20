@@ -35,6 +35,7 @@ build-test: [
 depends: [
   "conf-nanomsg"
   "ocamlfind" {build}
+  "ocamlbuild" {build}
   "oasis" {build}
   "ctypes" {>= "0.3"}
   "ctypes-foreign"
