@@ -1,5 +1,5 @@
-open Core.Std
-open Async.Std
+open Core
+open Async
 
 module Bytes = Caml.Bytes
 
@@ -12,8 +12,8 @@ let ready sock io_event =
     | `Read -> recv_fd
   in
   f sock |> function
-  | `Error _ -> return @@ `Bad_fd
-  | `Ok fd ->
+  | Error _ -> return @@ `Bad_fd
+  | Ok fd ->
     let fd = Fd.create ~avoid_nonblock_if_possible:true
         (Fd.Kind.Socket `Passive) fd
         Info.(of_string "nanomsg pollfd") in
@@ -29,7 +29,7 @@ let send_buf blitf lenf sock buf pos len =
       let nn_buf_p = Ctypes.(allocate (ptr void) nn_buf) in
       let ba = Ctypes.(bigarray_of_ptr array1 len
                          Bigarray.char @@ from_voidp char nn_buf) in
-      blitf buf pos ba 0 len;
+      blitf ~src:buf ~src_pos:pos ~dst:ba ~dst_pos:0 ~len;
       ready sock `Write >>| function
       | `Bad_fd | `Closed -> Result.Error ("Internal", "`Bad_fd | `Closed")
       | `Ready ->
@@ -39,11 +39,11 @@ let send_buf blitf lenf sock buf pos len =
             Symbol.(value_of_name_exn "NN_DONTWAIT") in
         Result.Ok ()
 
-let send_bigstring_buf = send_buf Bigstring.blit Bigstring.size
-let send_bytes_buf = send_buf Bigstring.blit_of_bytes Bytes.length
+let send_bigstring_buf = send_buf Bigstring.blit Bigstring.length
+let send_bytes_buf = send_buf Bigstring.From_string.blit Bytes.length
 
 let send_bigstring sock buf =
-  send_bigstring_buf sock buf 0 @@ Bigstring.size buf
+  send_bigstring_buf sock buf 0 @@ Bigstring.length buf
 
 let send_bytes sock b =
   send_bytes_buf sock b 0 (Bytes.length b)
@@ -73,16 +73,16 @@ let recv sock f =
 
 let recv_bytes_buf sock buf pos =
   recv sock (fun ba ->
-      let len = Bigstring.size ba in
-      Bigstring.blit_to_bytes ba 0 buf pos len;
+      let len = Bigstring.length ba in
+      Bigstring.To_string.blit ba 0 buf pos len;
       return len
     )
 
 let recv_bytes sock =
   recv sock (fun ba ->
-      let len = Bigstring.size ba in
+      let len = Bigstring.length ba in
       let buf = Bytes.create len in
-      Bigstring.blit_to_bytes ba 0 buf 0 len;
+      Bigstring.To_string.blit ~src:ba ~src_pos:0 ~dst:buf ~dst_pos:0 ~len;
       return buf
     )
 
