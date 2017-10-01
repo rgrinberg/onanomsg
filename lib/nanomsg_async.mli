@@ -1,5 +1,4 @@
-open Core.Std
-open Async.Std
+open Async
 open Nanomsg
 
 (** {1 Asynchronous I/O} *)
