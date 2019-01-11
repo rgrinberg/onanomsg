@@ -31,7 +31,7 @@ end
 
 module Ipaddr = struct
   include Ipaddr
-  let pp = pp_hum
+  let pp = pp
 end
 
 module Symbol = struct

@@ -24,12 +24,12 @@ type proto =
 module Addr = struct
   module V4 = struct
     include Ipaddr.V4
-    let pp = pp_hum
+    let pp = pp
   end
 
   module V6 = struct
     include Ipaddr.V6
-    let pp = pp_hum
+    let pp = pp
   end
 
   type bind = [

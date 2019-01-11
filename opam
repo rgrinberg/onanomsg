@@ -39,7 +39,7 @@ depends: [
   "ctypes" {>= "0.3"}
   "ctypes-foreign"
   "result"
-  "ipaddr"
+  "ipaddr" {>= "3.0.0"}
   "ppx_deriving"
   "bigstring"
   "ounit" {test}
