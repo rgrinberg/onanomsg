@@ -34,19 +34,18 @@ let tcp_pubsub_test _ =
       `Tcp ((`V6 Ipaddr.V6.localhost, None), port) in
     wrap_error @@ Nanomsg.subscribe sub "" >>= fun () ->
     let msg = "bleh" in
-    let len = String.length msg in
     let recv_msg = Bytes.create @@ String.length msg in
     let recv_msg' = Bytes.create @@ String.length msg in
     let th = Nanomsg_lwt.send_string pub msg in
     Nanomsg_lwt.recv_string sub >>= fun str ->
     assert_equal (Lwt.Return ()) (Lwt.state th);
     assert_equal msg str;
-    let th = Nanomsg_lwt.send_string_buf pub msg 0 len in
-    Nanomsg_lwt.recv_bytes_buf sub recv_msg 0 >>= fun (_:int) ->
+    let th = Nanomsg_lwt.send_string pub msg in
+    Nanomsg_lwt.recv_buf sub recv_msg >>= fun (_:int) ->
     assert_equal (Lwt.Return ()) (Lwt.state th);
     assert_equal msg (Bytes.unsafe_to_string recv_msg);
     let th = Nanomsg_lwt.send_bytes pub recv_msg in
-    Nanomsg_lwt.recv_bytes_buf sub recv_msg' 0 >|= fun (_:int) ->
+    Nanomsg_lwt.recv_buf sub recv_msg' >|= fun (_:int) ->
     assert_equal (Lwt.Return ()) (Lwt.state th);
     assert_equal recv_msg recv_msg';
     close_exn pub;

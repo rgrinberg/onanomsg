@@ -11,11 +11,11 @@ Homepage     : https://github.com/rgrinberg/onanomsg
 
 Flag lwt
   Description: build the Lwt library
-  Default:     true
+  Default:     false
 
 Flag async
   Description: build the Async library
-  Default:     true
+  Default:     false
 
 Library "nanomsg"
   Path:             lib
